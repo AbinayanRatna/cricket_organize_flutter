@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
@@ -11,14 +11,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Platform.isAndroid
       ? await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: "AIzaSyA_S5hITxt49RbV_NsI4rNu065QPEoyRIQ",
-      appId: "1:290008525635:android:3e463ff0237fd264c6ddf6",
-      messagingSenderId: "290008525635",
-      projectId: "cricket-flutter",
-      storageBucket: "cricket-flutter.appspot.com",
-    ),
-  )
+          options: const FirebaseOptions(
+            apiKey: "AIzaSyA_S5hITxt49RbV_NsI4rNu065QPEoyRIQ",
+            appId: "1:290008525635:android:3e463ff0237fd264c6ddf6",
+            messagingSenderId: "290008525635",
+            projectId: "cricket-flutter",
+            storageBucket: "cricket-flutter.appspot.com",
+          ),
+        )
       : await Firebase.initializeApp(); //need to add firebase for ios
   runApp(const MyApp());
 }
@@ -49,7 +49,7 @@ class AdminSelectTournamentPage extends StatefulWidget {
 class _AdminSelectTournamentPage extends State<AdminSelectTournamentPage> {
   Query dbRef = FirebaseDatabase.instance.ref().child('Tournaments');
   DatabaseReference reference =
-  FirebaseDatabase.instance.ref().child('Tournaments');
+      FirebaseDatabase.instance.ref().child('Tournaments');
   late DatabaseReference dbRef2;
 
   @override
@@ -91,12 +91,17 @@ class _AdminSelectTournamentPage extends State<AdminSelectTournamentPage> {
                         //     'name': "Indian premeier league",
                         //   };
                         //  dbRef2.push().set(tournament);
+                        print("newnew = " +
+                            MediaQuery.of(context).size.width.toString() +
+                            "=" +
+                            ((MediaQuery.of(context).size.height / 14) * 5)
+                                .toString());
                         Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
                               builder: (context) => AdminCreateTournamentPage(),
                             ),
-                                (route) => false);
+                            (route) => false);
                         Fluttertoast.showToast(
                             msg: "msg", toastLength: Toast.LENGTH_SHORT);
                       },
@@ -150,8 +155,322 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create tournament")),
-      body: Column(
+        appBar: AppBar(
+          title: Text("Create tournament", style: TextStyle(fontSize: 20.sp)),
+          backgroundColor: const Color.fromRGBO(197, 139, 48, 1.0),
+          toolbarHeight: 45.w,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                child: Image.asset(
+                  "assets/add_tournament.jpg",
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 9,
+              child: Container(
+                width: (MediaQuery.of(context).size.width),
+                height: (MediaQuery.of(context).size.height),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 25.w, left: 30.w),
+                        child: Text(
+                          "Tournament name:",
+                          style: TextStyle(color: Colors.black, fontSize: 15.w),
+                        ),
+                      ),
+                      Padding(
+                        padding:
+                            EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                              hintStyle: TextStyle(
+                                  color: Color.fromRGBO(194, 173, 129, 1.0)),
+                              hintText: "eg:- Indian Premier League"),
+                          style:
+                              (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                        ),
+                      ),
+                      Padding(
+                        padding:
+                            EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
+                        child: Row(children: [
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              "Players in a team: ",
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 15.w),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              "Overs per team: ",
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 15.w),
+                            ),
+                          )
+                        ]),
+                      ),
+                      Padding(
+                        padding:
+                            EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
+                        child: Row(children: [
+                          Expanded(
+                            flex: 1,
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 15.w),
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                    hintStyle: TextStyle(
+                                        color:
+                                            Color.fromRGBO(194, 173, 129, 1.0)),
+                                    hintText: "eg:- 11"),
+                                style: (TextStyle(
+                                    color: Colors.indigo, fontSize: 15.w)),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 15.w),
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                    hintStyle: TextStyle(
+                                        color:
+                                            Color.fromRGBO(194, 173, 129, 1.0)),
+                                    hintText: "eg:- 20"),
+                                style: (TextStyle(
+                                    color: Colors.indigo, fontSize: 15.w)),
+                              ),
+                            ),
+                          )
+                        ]),
+                      ),
+                      Padding(
+                        padding:
+                            EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
+                        child: Row(children: [
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              "Overs for a bowler: ",
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 15.w),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              "Balls in a over: ",
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 15.w),
+                            ),
+                          )
+                        ]),
+                      ),
+                      Padding(
+                        padding:
+                            EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
+                        child: Row(children: [
+                          Expanded(
+                            flex: 1,
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 15.w),
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                    hintStyle: TextStyle(
+                                        color:
+                                            Color.fromRGBO(194, 173, 129, 1.0)),
+                                    hintText: "eg:- 4"),
+                                style: (TextStyle(
+                                    color: Colors.indigo, fontSize: 15.w)),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 15.w),
+                              child: TextField(
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                    hintStyle: TextStyle(
+                                        color:
+                                            Color.fromRGBO(194, 173, 129, 1.0)),
+                                    hintText: "eg:- 6"),
+                                style: (TextStyle(
+                                    color: Colors.indigo, fontSize: 15.w)),
+                              ),
+                            ),
+                          )
+                        ]),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 15.w, left: 30.w),
+                        child: Text(
+                          "Ball type:",
+                          style: TextStyle(color: Colors.black, fontSize: 15.w),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 15.w),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Padding(
+                                padding:
+                                    EdgeInsets.only(left: 30.w, right: 15.w),
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    backgroundColor: (isTennisBall)
+                                        ? Colors.red
+                                        : Colors.blue,
+                                    // onPrimary: Colors.white,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      isTennisBall = true;
+                                      isLeatherBall = false;
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                        top: 10.w, bottom: 10.w),
+                                    child: Text(
+                                      "Tennis",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 15.w),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Padding(
+                                padding:
+                                    EdgeInsets.only(right: 30.w, left: 15.w),
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    backgroundColor: (isLeatherBall)
+                                        ? Colors.red
+                                        : Colors.blue,
+                                    onPrimary: Colors.white,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      isLeatherBall = true;
+                                      isTennisBall = false;
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                        top: 10.w, bottom: 10.w),
+                                    child: Text(
+                                      "Leather",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 15.w),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 20.w, left: 30.w),
+                        child: Text(
+                          "Matches in the tournament:",
+                          style: TextStyle(color: Colors.black, fontSize: 15.w),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 30.w, right: 30.w),
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              hintStyle: TextStyle(
+                                  color: Color.fromRGBO(194, 173, 129, 1.0)),
+                              hintText: "eg:- 10"),
+                          style:
+                              (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: Container(
+            child: Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.zero)),
+                  backgroundColor: const Color.fromRGBO(117, 90, 41, 1.0),
+                ),
+                onPressed: () {},
+                child: Padding(
+                  padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white, fontSize: 15.w),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  // backgroundColor: const Color.fromRGBO(23, 64, 124, 1.0),
+                  backgroundColor: const Color.fromRGBO(107, 75, 3, 1.0),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.zero)),
+                ),
+                onPressed: () {},
+                child: Padding(
+                  padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
+                  child: Text(
+                    "Save",
+                    style: TextStyle(color: Colors.white, fontSize: 15.w),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        )));
+  }
+}
+
+/*
+Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -161,273 +480,269 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
             child: Center(child: SvgPicture.asset("assets/add_tournament.svg",height: 120.w,)),
           ),),
           Expanded(flex:9,
-            child:SingleChildScrollView(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: 25.w, left: 30.w),
-                    child: Text(
-                      "Tournament name:",
-                      style: TextStyle(color: Colors.black, fontSize: 15.w),
-                    ),
+            child:Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 25.w, left: 30.w),
+                  child: Text(
+                    "Tournament name:",
+                    style: TextStyle(color: Colors.black, fontSize: 15.w),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                          hintStyle:
-                          TextStyle(color: Color.fromRGBO(149, 179, 231, 1.0)),
-                          hintText: "eg:- Indian Premier League"),
-                      style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
-                    ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                        hintStyle:
+                        TextStyle(color: Color.fromRGBO(149, 179, 231, 1.0)),
+                        hintText: "eg:- Indian Premier League"),
+                    style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
-                    child: Row(children: [
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          "Players in a team: ",
-                          style: TextStyle(color: Colors.black, fontSize: 15.w),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
+                  child: Row(children: [
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        "Players in a team: ",
+                        style: TextStyle(color: Colors.black, fontSize: 15.w),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        "Overs per team: ",
+                        style: TextStyle(color: Colors.black, fontSize: 15.w),
+                      ),
+                    )
+                  ]),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
+                  child: Row(children: [
+                    Expanded(
+                      flex: 1,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 15.w),
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              hintStyle: TextStyle(
+                                  color: Color.fromRGBO(149, 179, 231, 1.0)),
+                              hintText: "eg:- 11"),
+                          style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
                         ),
                       ),
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          "Overs per team: ",
-                          style: TextStyle(color: Colors.black, fontSize: 15.w),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 15.w),
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              hintStyle: TextStyle(
+                                  color: Color.fromRGBO(149, 179, 231, 1.0)),
+                              hintText: "eg:- 20"),
+                          style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
                         ),
-                      )
-                    ]),
+                      ),
+                    )
+                  ]),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
+                  child: Row(children: [
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        "Overs for a bowler: ",
+                        style: TextStyle(color: Colors.black, fontSize: 15.w),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        "Balls in a over: ",
+                        style: TextStyle(color: Colors.black, fontSize: 15.w),
+                      ),
+                    )
+                  ]),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
+                  child: Row(children: [
+                    Expanded(
+                      flex: 1,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 15.w),
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              hintStyle: TextStyle(
+                                  color: Color.fromRGBO(149, 179, 231, 1.0)),
+                              hintText: "eg:- 4"),
+                          style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 15.w),
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              hintStyle: TextStyle(
+                                  color: Color.fromRGBO(149, 179, 231, 1.0)),
+                              hintText: "eg:- 6"),
+                          style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                        ),
+                      ),
+                    )
+                  ]),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 25.w, left: 30.w),
+                  child: Text(
+                    "Matches in the tournament:",
+                    style: TextStyle(color: Colors.black, fontSize: 15.w),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
-                    child: Row(children: [
+                ),
+                Padding(
+                  padding: EdgeInsets.only( left: 30.w, right: 30.w),
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                        hintStyle:
+                        TextStyle(color: Color.fromRGBO(149, 179, 231, 1.0)),
+                        hintText: "eg:- 10"),
+                    style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 25.w, left: 30.w),
+                  child: Text(
+                    "Ball type:",
+                    style: TextStyle(color: Colors.black, fontSize: 15.w),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 15.w),
+                  child: Row(
+                    children: [
                       Expanded(
                         flex: 1,
                         child: Padding(
-                          padding: EdgeInsets.only(right: 15.w),
-                          child: TextField(
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: Color.fromRGBO(149, 179, 231, 1.0)),
-                                hintText: "eg:- 11"),
-                            style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 15.w),
-                          child: TextField(
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: Color.fromRGBO(149, 179, 231, 1.0)),
-                                hintText: "eg:- 20"),
-                            style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
-                          ),
-                        ),
-                      )
-                    ]),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
-                    child: Row(children: [
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          "Overs for a bowler: ",
-                          style: TextStyle(color: Colors.black, fontSize: 15.w),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          "Balls in a over: ",
-                          style: TextStyle(color: Colors.black, fontSize: 15.w),
-                        ),
-                      )
-                    ]),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
-                    child: Row(children: [
-                      Expanded(
-                        flex: 1,
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 15.w),
-                          child: TextField(
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: Color.fromRGBO(149, 179, 231, 1.0)),
-                                hintText: "eg:- 4"),
-                            style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 15.w),
-                          child: TextField(
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: Color.fromRGBO(149, 179, 231, 1.0)),
-                                hintText: "eg:- 6"),
-                            style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
-                          ),
-                        ),
-                      )
-                    ]),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(top: 25.w, left: 30.w),
-                    child: Text(
-                      "Matches in the tournament:",
-                      style: TextStyle(color: Colors.black, fontSize: 15.w),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only( left: 30.w, right: 30.w),
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                          hintStyle:
-                          TextStyle(color: Color.fromRGBO(149, 179, 231, 1.0)),
-                          hintText: "eg:- 10"),
-                      style: (TextStyle(color: Colors.indigo, fontSize: 15.w)),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(top: 25.w, left: 30.w),
-                    child: Text(
-                      "Ball type:",
-                      style: TextStyle(color: Colors.black, fontSize: 15.w),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(top: 15.w),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 30.w, right: 15.w),
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0,
-                                backgroundColor:
-                                (isTennisBall ) ?Colors.red: Colors.blue,
-                                // onPrimary: Colors.white,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  isTennisBall = true;
-                                  isLeatherBall = false;
-                                });
+                          padding: EdgeInsets.only(left: 30.w, right: 15.w),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              backgroundColor:
+                              (isTennisBall ) ?Colors.red: Colors.blue,
+                              // onPrimary: Colors.white,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                isTennisBall = true;
+                                isLeatherBall = false;
+                              });
 
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 10.w, bottom: 10.w),
-                                child: Text(
-                                  "Tennis",
-                                  style: TextStyle(color: Colors.white, fontSize: 15.w),
-                                ),
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 10.w, bottom: 10.w),
+                              child: Text(
+                                "Tennis",
+                                style: TextStyle(color: Colors.white, fontSize: 15.w),
                               ),
                             ),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 30.w, left: 15.w),
-                            child: ElevatedButton(
-                              style:  ElevatedButton.styleFrom(
-                                elevation: 0,
-                                backgroundColor:
-                                ( isLeatherBall) ? Colors.red:Colors.blue,
-                                onPrimary: Colors.white,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  isLeatherBall = true;
-                                  isTennisBall = false;
-                                });
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 10.w, bottom: 10.w),
-                                child: Text(
-                                  "Leather",
-                                  style: TextStyle(color: Colors.white, fontSize: 15.w),
-                                ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 30.w, left: 15.w),
+                          child: ElevatedButton(
+                            style:  ElevatedButton.styleFrom(
+                              elevation: 0,
+                              backgroundColor:
+                              ( isLeatherBall) ? Colors.red:Colors.blue,
+                              onPrimary: Colors.white,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                isLeatherBall = true;
+                                isTennisBall = false;
+                              });
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 10.w, bottom: 10.w),
+                              child: Text(
+                                "Leather",
+                                style: TextStyle(color: Colors.white, fontSize: 15.w),
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  Spacer(),
-                  Padding(
-                    padding: EdgeInsets.only(top: 28.w,bottom:25.w),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 30.w, right: 15.w),
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0,
-                                backgroundColor: Colors.blue,
-                              ),
-                              onPressed: () { },
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 10.w, bottom: 10.w),
-                                child: Text(
-                                  "Cancel",
-                                  style: TextStyle(color: Colors.white, fontSize: 15.w),
-                                ),
+                ),
+                Spacer(),
+                Padding(
+                  padding: EdgeInsets.only(top: 28.w,bottom:25.w),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 30.w, right: 15.w),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              backgroundColor: Colors.blue,
+                            ),
+                            onPressed: () { },
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 10.w, bottom: 10.w),
+                              child: Text(
+                                "Cancel",
+                                style: TextStyle(color: Colors.white, fontSize: 15.w),
                               ),
                             ),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 30.w, left: 15.w),
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                elevation: 0,
-                                backgroundColor: Colors.blue,
-                              ),
-                              onPressed: () { },
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 10.w, bottom: 10.w),
-                                child: Text(
-                                  "Save",
-                                  style: TextStyle(color: Colors.white, fontSize: 15.w),
-                                ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 30.w, left: 15.w),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              backgroundColor: Colors.blue,
+                            ),
+                            onPressed: () { },
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 10.w, bottom: 10.w),
+                              child: Text(
+                                "Save",
+                                style: TextStyle(color: Colors.white, fontSize: 15.w),
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
             )
           ),
 
 
         ],
-      ),
-    );
-  }
-}
+      )
+ */
