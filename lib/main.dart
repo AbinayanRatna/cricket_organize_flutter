@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(builder: (_, child) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: AdminSelectPlayersToTeam(),
+        home: AdminAddTeams(),
       );
     });
   }
@@ -1139,7 +1139,7 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                     'image': image_url,
                   };
                   dbRef2.set(teams);
-                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AdminSelectPlayersToTeam()), (route) => false);
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AdminSelectPlayersToTeam(teamUuid: uuid)), (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -1358,7 +1358,8 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
 }
 
 class AdminSelectPlayersToTeam extends StatefulWidget {
-  const AdminSelectPlayersToTeam({super.key});
+  final String teamUuid;
+  const AdminSelectPlayersToTeam({super.key,required this.teamUuid});
 
   @override
   State<AdminSelectPlayersToTeam> createState() => _AdminSelectPlayersToTeam();
@@ -1366,6 +1367,7 @@ class AdminSelectPlayersToTeam extends StatefulWidget {
 
 class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
   late DatabaseReference dbRef2;
+  late DatabaseReference dbRef3;
   late Query dbQuery;
   bool isAdded = false;
 
@@ -1378,7 +1380,7 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
 
   void updateIsAdded() {
     DatabaseReference dbRef =
-        FirebaseDatabase.instance.reference().child("Players");
+        FirebaseDatabase.instance.ref().child("Players");
 
     dbRef.once().then((DatabaseEvent event) {
       DataSnapshot snapshot = event.snapshot;
@@ -1386,7 +1388,7 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
         Map<String, dynamic> players =
             Map<String, dynamic>.from(snapshot.value as Map<dynamic, dynamic>);
         players.forEach((key, value) {
-          dbRef.child(key).update({"isAdded": "false"});
+          dbRef.child(key).update({"isAdded": "new"});
         });
       }
     });
@@ -1394,6 +1396,7 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
 
   Widget listItem({required Map thisPlayer}) {
     String? id = thisPlayer['id'];
+    String? name = thisPlayer['name'];
     String? playerAdded = thisPlayer['isAdded'];
     return Padding(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
@@ -1440,13 +1443,22 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
                           .ref()
                           .child('Players')
                           .child(id.toString());
+                      dbRef3 = FirebaseDatabase.instance
+                          .ref()
+                          .child('Teams')
+                          .child(widget.teamUuid);
                       isAdded = (playerAdded != "true") ? false : true;
                       isAdded = !isAdded;
                     });
                     Map<String, String> thisPlayer = {
                       'isAdded': isAdded.toString()
                     };
+                    Map<String,String> thisPlayerToTeam={
+                      id!:name!,
+                    };
                     dbRef2.update(thisPlayer);
+                    thisPlayer['isAdded'] == "true" ? dbRef3.child('Players').update(thisPlayerToTeam):null;
+                    thisPlayer['isAdded'] == "false" ? dbRef3.child('Players').child(id).remove():null;
                   },
                   child: Text(
                     (thisPlayer['isAdded'] == "true") ? "Remove" : "Add",
