@@ -1,26 +1,28 @@
-import 'dart:ffi';
 import 'dart:io';
-
+import 'package:path/path.dart' as Path;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Platform.isAndroid
       ? await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: "AIzaSyA_S5hITxt49RbV_NsI4rNu065QPEoyRIQ",
-      appId: "1:290008525635:android:3e463ff0237fd264c6ddf6",
-      messagingSenderId: "290008525635",
-      projectId: "cricket-flutter",
-      storageBucket: "cricket-flutter.appspot.com",
-    ),
-  )
+          options: const FirebaseOptions(
+            apiKey: "AIzaSyA_S5hITxt49RbV_NsI4rNu065QPEoyRIQ",
+            appId: "1:290008525635:android:3e463ff0237fd264c6ddf6",
+            messagingSenderId: "290008525635",
+            projectId: "cricket-flutter",
+            storageBucket: "cricket-flutter.appspot.com",
+          ),
+        )
       : await Firebase.initializeApp(); //need to add firebase for ios
   runApp(const MyApp());
 }
@@ -51,7 +53,7 @@ class AdminSelectTournamentPage extends StatefulWidget {
 class _AdminSelectTournamentPage extends State<AdminSelectTournamentPage> {
   Query dbRef = FirebaseDatabase.instance.ref().child('Tournaments');
   DatabaseReference reference =
-  FirebaseDatabase.instance.ref().child('Tournaments');
+      FirebaseDatabase.instance.ref().child('Tournaments');
   late DatabaseReference dbRef2;
 
   @override
@@ -72,10 +74,8 @@ class _AdminSelectTournamentPage extends State<AdminSelectTournamentPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  AdminMatchesConfigurePage(
-                      uuid: tournament['id'],
-                      tournamentName: tournament['name']),
+              builder: (context) => AdminMatchesConfigurePage(
+                  uuid: tournament['id'], tournamentName: tournament['name']),
             ),
           );
         },
@@ -105,7 +105,7 @@ class _AdminSelectTournamentPage extends State<AdminSelectTournamentPage> {
                             MaterialPageRoute(
                               builder: (context) => AdminCreateTournamentPage(),
                             ),
-                                (route) => false);
+                            (route) => false);
                         Fluttertoast.showToast(
                             msg: "msg", toastLength: Toast.LENGTH_SHORT);
                       },
@@ -177,10 +177,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
           Expanded(
             flex: 3,
             child: Container(
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
+              width: MediaQuery.of(context).size.width,
               child: Image.asset(
                 "assets/add_tournament.jpg",
                 fit: BoxFit.cover,
@@ -190,14 +187,8 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
           Expanded(
             flex: 9,
             child: Container(
-              width: (MediaQuery
-                  .of(context)
-                  .size
-                  .width),
-              height: (MediaQuery
-                  .of(context)
-                  .size
-                  .height),
+              width: (MediaQuery.of(context).size.width),
+              height: (MediaQuery.of(context).size.height),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,7 +202,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
+                          EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
                       child: TextField(
                         controller: tournamentNameController,
                         decoration: const InputDecoration(
@@ -219,19 +210,19 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                                 color: Color.fromRGBO(194, 173, 129, 1.0)),
                             hintText: "eg:- Indian Premier League"),
                         style:
-                        (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                            (TextStyle(color: Colors.indigo, fontSize: 15.w)),
                       ),
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
+                          EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
                       child: Row(children: [
                         Expanded(
                           flex: 1,
                           child: Text(
                             "Players in a team: ",
                             style:
-                            TextStyle(color: Colors.black, fontSize: 15.w),
+                                TextStyle(color: Colors.black, fontSize: 15.w),
                           ),
                         ),
                         Expanded(
@@ -239,14 +230,14 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                           child: Text(
                             "Overs per team: ",
                             style:
-                            TextStyle(color: Colors.black, fontSize: 15.w),
+                                TextStyle(color: Colors.black, fontSize: 15.w),
                           ),
                         )
                       ]),
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
+                          EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
                       child: Row(children: [
                         Expanded(
                           flex: 1,
@@ -258,7 +249,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
                                       color:
-                                      Color.fromRGBO(194, 173, 129, 1.0)),
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 11"),
                               style: (TextStyle(
                                   color: Colors.indigo, fontSize: 15.w)),
@@ -275,7 +266,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
                                       color:
-                                      Color.fromRGBO(194, 173, 129, 1.0)),
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 20"),
                               style: (TextStyle(
                                   color: Colors.indigo, fontSize: 15.w)),
@@ -286,14 +277,14 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
+                          EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
                       child: Row(children: [
                         Expanded(
                           flex: 1,
                           child: Text(
                             "Overs for a bowler: ",
                             style:
-                            TextStyle(color: Colors.black, fontSize: 15.w),
+                                TextStyle(color: Colors.black, fontSize: 15.w),
                           ),
                         ),
                         Expanded(
@@ -301,14 +292,14 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                           child: Text(
                             "Balls in a over: ",
                             style:
-                            TextStyle(color: Colors.black, fontSize: 15.w),
+                                TextStyle(color: Colors.black, fontSize: 15.w),
                           ),
                         )
                       ]),
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
+                          EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
                       child: Row(children: [
                         Expanded(
                           flex: 1,
@@ -320,7 +311,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
                                       color:
-                                      Color.fromRGBO(194, 173, 129, 1.0)),
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 4"),
                               style: (TextStyle(
                                   color: Colors.indigo, fontSize: 15.w)),
@@ -337,7 +328,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
                                       color:
-                                      Color.fromRGBO(194, 173, 129, 1.0)),
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 6"),
                               style: (TextStyle(
                                   color: Colors.indigo, fontSize: 15.w)),
@@ -365,7 +356,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                                 style: ElevatedButton.styleFrom(
                                   elevation: 0,
                                   backgroundColor:
-                                  (isTennisBall) ? Colors.red : Colors.blue,
+                                      (isTennisBall) ? Colors.red : Colors.blue,
                                   // onPrimary: Colors.white,
                                 ),
                                 onPressed: () {
@@ -376,7 +367,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                                 },
                                 child: Padding(
                                   padding:
-                                  EdgeInsets.only(top: 10.w, bottom: 10.w),
+                                      EdgeInsets.only(top: 10.w, bottom: 10.w),
                                   child: Text(
                                     "Tennis",
                                     style: TextStyle(
@@ -406,7 +397,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                                 },
                                 child: Padding(
                                   padding:
-                                  EdgeInsets.only(top: 10.w, bottom: 10.w),
+                                      EdgeInsets.only(top: 10.w, bottom: 10.w),
                                   child: Text(
                                     "Leather",
                                     style: TextStyle(
@@ -444,7 +435,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                       MaterialPageRoute(
                         builder: (context) => const AdminSelectTournamentPage(),
                       ),
-                          (route) => false);
+                      (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -482,7 +473,7 @@ class _AdminCreateTournamentPage extends State<AdminCreateTournamentPage> {
                       MaterialPageRoute(
                         builder: (context) => const AdminSelectTournamentPage(),
                       ),
-                          (route) => false);
+                      (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -514,7 +505,7 @@ class AdminMatchesConfigurePage extends StatefulWidget {
 class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
   late Query dbQuery;
   DatabaseReference referenceTournament =
-  FirebaseDatabase.instance.ref().child('Tournaments');
+      FirebaseDatabase.instance.ref().child('Tournaments');
   late DatabaseReference referenceMatches;
 
   @override
@@ -534,10 +525,13 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
             padding: MaterialStatePropertyAll(
                 EdgeInsets.only(top: 20.w, bottom: 20.w))),
         onPressed: () {
-          (thisMatch['definedOrNot'] == "Not") ? Navigator.pushAndRemoveUntil(
-              context, MaterialPageRoute(
-              builder: (context) => const AdminConfigureMatches()), (
-              route) => false) : Null;
+          (thisMatch['definedOrNot'] == "Not")
+              ? Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AdminConfigureMatches()),
+                  (route) => false)
+              : Null;
         },
         child: Text(
             (thisMatch['definedOrNot'] == "Not")
@@ -601,8 +595,7 @@ class AdminConfigureMatches extends StatefulWidget {
   const AdminConfigureMatches({super.key});
 
   @override
-  State<AdminConfigureMatches> createState() =>
-      _AdminConfigureMatches();
+  State<AdminConfigureMatches> createState() => _AdminConfigureMatches();
 }
 
 class _AdminConfigureMatches extends State<AdminConfigureMatches> {
@@ -637,10 +630,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
           Expanded(
             flex: 3,
             child: Container(
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
+              width: MediaQuery.of(context).size.width,
               child: Image.asset(
                 "assets/add_tournament.jpg",
                 fit: BoxFit.cover,
@@ -650,14 +640,8 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
           Expanded(
             flex: 9,
             child: Container(
-              width: (MediaQuery
-                  .of(context)
-                  .size
-                  .width),
-              height: (MediaQuery
-                  .of(context)
-                  .size
-                  .height),
+              width: (MediaQuery.of(context).size.width),
+              height: (MediaQuery.of(context).size.height),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,7 +655,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
+                          EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
                       child: TextField(
                         controller: tournamentNameController,
                         decoration: const InputDecoration(
@@ -679,19 +663,19 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                                 color: Color.fromRGBO(194, 173, 129, 1.0)),
                             hintText: "eg:- Indian Premier League"),
                         style:
-                        (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                            (TextStyle(color: Colors.indigo, fontSize: 15.w)),
                       ),
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
+                          EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
                       child: Row(children: [
                         Expanded(
                           flex: 1,
                           child: Text(
                             "Players in a team: ",
                             style:
-                            TextStyle(color: Colors.black, fontSize: 15.w),
+                                TextStyle(color: Colors.black, fontSize: 15.w),
                           ),
                         ),
                         Expanded(
@@ -699,14 +683,14 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                           child: Text(
                             "Overs per team: ",
                             style:
-                            TextStyle(color: Colors.black, fontSize: 15.w),
+                                TextStyle(color: Colors.black, fontSize: 15.w),
                           ),
                         )
                       ]),
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
+                          EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
                       child: Row(children: [
                         Expanded(
                           flex: 1,
@@ -718,7 +702,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
                                       color:
-                                      Color.fromRGBO(194, 173, 129, 1.0)),
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 11"),
                               style: (TextStyle(
                                   color: Colors.indigo, fontSize: 15.w)),
@@ -735,7 +719,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
                                       color:
-                                      Color.fromRGBO(194, 173, 129, 1.0)),
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 20"),
                               style: (TextStyle(
                                   color: Colors.indigo, fontSize: 15.w)),
@@ -746,14 +730,14 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
+                          EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
                       child: Row(children: [
                         Expanded(
                           flex: 1,
                           child: Text(
                             "Overs for a bowler: ",
                             style:
-                            TextStyle(color: Colors.black, fontSize: 15.w),
+                                TextStyle(color: Colors.black, fontSize: 15.w),
                           ),
                         ),
                         Expanded(
@@ -761,14 +745,14 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                           child: Text(
                             "Balls in a over: ",
                             style:
-                            TextStyle(color: Colors.black, fontSize: 15.w),
+                                TextStyle(color: Colors.black, fontSize: 15.w),
                           ),
                         )
                       ]),
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
+                          EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
                       child: Row(children: [
                         Expanded(
                           flex: 1,
@@ -780,7 +764,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
                                       color:
-                                      Color.fromRGBO(194, 173, 129, 1.0)),
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 4"),
                               style: (TextStyle(
                                   color: Colors.indigo, fontSize: 15.w)),
@@ -797,7 +781,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
                                       color:
-                                      Color.fromRGBO(194, 173, 129, 1.0)),
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 6"),
                               style: (TextStyle(
                                   color: Colors.indigo, fontSize: 15.w)),
@@ -825,7 +809,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                                 style: ElevatedButton.styleFrom(
                                   elevation: 0,
                                   backgroundColor:
-                                  (isTennisBall) ? Colors.red : Colors.blue,
+                                      (isTennisBall) ? Colors.red : Colors.blue,
                                   // onPrimary: Colors.white,
                                 ),
                                 onPressed: () {
@@ -836,7 +820,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                                 },
                                 child: Padding(
                                   padding:
-                                  EdgeInsets.only(top: 10.w, bottom: 10.w),
+                                      EdgeInsets.only(top: 10.w, bottom: 10.w),
                                   child: Text(
                                     "Tennis",
                                     style: TextStyle(
@@ -866,7 +850,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                                 },
                                 child: Padding(
                                   padding:
-                                  EdgeInsets.only(top: 10.w, bottom: 10.w),
+                                      EdgeInsets.only(top: 10.w, bottom: 10.w),
                                   child: Text(
                                     "Leather",
                                     style: TextStyle(
@@ -904,7 +888,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                       MaterialPageRoute(
                         builder: (context) => const AdminSelectTournamentPage(),
                       ),
-                          (route) => false);
+                      (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -942,7 +926,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                       MaterialPageRoute(
                         builder: (context) => const AdminSelectTournamentPage(),
                       ),
-                          (route) => false);
+                      (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -964,8 +948,7 @@ class AdminAddTeams extends StatefulWidget {
   const AdminAddTeams({super.key});
 
   @override
-  State<AdminAddTeams> createState() =>
-      _AdminAddTeams();
+  State<AdminAddTeams> createState() => _AdminAddTeams();
 }
 
 class _AdminAddTeams extends State<AdminAddTeams> {
@@ -973,59 +956,93 @@ class _AdminAddTeams extends State<AdminAddTeams> {
   bool isTennisBall = false;
   bool isLeatherBall = false;
   int numberOfPlayers = 0;
-  TextEditingController tournamentNameController = TextEditingController();
-  TextEditingController playersAmountController = TextEditingController();
-  TextEditingController oversAmountController = TextEditingController();
-  TextEditingController oversForOneBowlerController = TextEditingController();
-  TextEditingController ballsInOneOverController = TextEditingController();
-  TextEditingController matchesAmountController = TextEditingController();
+  TextEditingController teamNameController = TextEditingController();
+  TextEditingController shortNameController = TextEditingController();
   String ballType = "";
   String uuid = Uuid().v4();
+  late String image_url ;
+   File? image;
+
+
+  Future pickImage() async {
+    try {
+      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+      final imageTemp = File(image.path);
+      setState(() => this.image = imageTemp);
+    } on PlatformException catch (e) {
+      print("failed to pick image : $e");
+    }
+    var imageFile = File(image!.path);
+    String fileName = Path.basename(imageFile.path);
+    FirebaseStorage storage = FirebaseStorage.instance;
+    Reference ref =
+    storage.ref().child("Team logo" + fileName);
+    UploadTask uploadTask = ref.putFile(imageFile);
+    await uploadTask.whenComplete(() async {
+      var url = await ref.getDownloadURL();
+      image_url = url.toString();
+    }).catchError((onError) {
+      print(onError);
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    dbRef2 = FirebaseDatabase.instance.ref().child('Tournaments').child(uuid);
+    dbRef2 = FirebaseDatabase.instance.ref().child('Teams').child(uuid);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Create tournament", style: TextStyle(fontSize: 20.sp)),
+        title: Text("Create Teams", style: TextStyle(fontSize: 20.sp)),
         backgroundColor: const Color.fromRGBO(197, 139, 48, 1.0),
         toolbarHeight: 45.w,
       ),
       body: Column(
         children: [
           Expanded(
-            flex: 3,
-            child: Container(
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
-              child: Image.asset(
-                "assets/add_tournament.jpg",
-                fit: BoxFit.cover,
-              ),
-            ),
+            flex: 1,
+            child: Container(),
           ),
           Expanded(
-            flex: 9,
+            flex: 15,
             child: Container(
-              width: (MediaQuery
-                  .of(context)
-                  .size
-                  .width),
-              height: (MediaQuery
-                  .of(context)
-                  .size
-                  .height),
+              width: (MediaQuery.of(context).size.width),
+              height: (MediaQuery.of(context).size.height),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Padding(
+                        padding: EdgeInsets.only(top: 25.w, left: 30.w),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                                child: (image == null)
+                                    ? Image.asset(
+                                        "assets/add_tournament.jpg",
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.file(image!, fit: BoxFit.cover),
+                                height: MediaQuery.of(context).size.height / 5,
+                                width: MediaQuery.of(context).size.width / 3),
+                            Padding(
+                              padding: EdgeInsets.only(left:30.w),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  pickImage();
+                                },
+                                child: Padding(
+                                  padding:  EdgeInsets.only(top:10.w,bottom:10.w),
+                                  child: Text("Select logo",style: TextStyle(color: Colors.white, fontSize: 20.w)),
+                                ),
+                              ),
+                            )
+                          ],
+                        )),
                     Padding(
                       padding: EdgeInsets.only(top: 25.w, left: 30.w),
                       child: Text(
@@ -1035,15 +1052,15 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
+                          EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
                       child: TextField(
-                        controller: tournamentNameController,
+                        controller: teamNameController,
                         decoration: const InputDecoration(
                             hintStyle: TextStyle(
                                 color: Color.fromRGBO(194, 173, 129, 1.0)),
                             hintText: "eg:- Chennai Super Kings"),
                         style:
-                        (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                            (TextStyle(color: Colors.indigo, fontSize: 15.w)),
                       ),
                     ),
                     Padding(
@@ -1055,22 +1072,16 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
+                          EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
                       child: TextField(
+                        controller: shortNameController,
                         maxLength: 5,
                         decoration: const InputDecoration(
                             hintStyle: TextStyle(
                                 color: Color.fromRGBO(194, 173, 129, 1.0)),
                             hintText: "eg:- CSK"),
                         style:
-                        (TextStyle(color: Colors.indigo, fontSize: 15.w)),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 25.w, left: 30.w),
-                      child: Text(
-                        "Add players:",
-                        style: TextStyle(color: Colors.black, fontSize: 15.w),
+                            (TextStyle(color: Colors.indigo, fontSize: 15.w)),
                       ),
                     ),
                   ],
@@ -1098,7 +1109,7 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                       MaterialPageRoute(
                         builder: (context) => const AdminSelectTournamentPage(),
                       ),
-                          (route) => false);
+                      (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -1121,27 +1132,19 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                 ),
                 onPressed: () {
                   ballType = (isTennisBall) ? "Tennis ball" : "Leather Ball";
-                  Map<String, String> tournament = {
+                  Map<String, String> teams = {
                     'id': uuid,
-                    'name': tournamentNameController.text.trim(),
-                    'Players': playersAmountController.text.trim(),
-                    'Overs': oversAmountController.text.trim(),
-                    'overs per bowler': oversForOneBowlerController.text.trim(),
-                    'balls in an over': ballsInOneOverController.text.trim(),
-                    'ball type': ballType,
+                    'name': teamNameController.text.trim(),
+                    'short': shortNameController.text.trim(),
+                    'image': image_url,
                   };
-                  dbRef2.set(tournament);
-                  Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AdminSelectTournamentPage(),
-                      ),
-                          (route) => false);
+                  dbRef2.set(teams);
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AdminSelectPlayersToTeam()), (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
                   child: Text(
-                    "Save",
+                    "Add players",
                     style: TextStyle(color: Colors.white, fontSize: 15.w),
                   ),
                 ),
@@ -1158,8 +1161,7 @@ class AdminAddPlayers extends StatefulWidget {
   const AdminAddPlayers({super.key});
 
   @override
-  State<AdminAddPlayers> createState() =>
-      _AdminAddPlayers();
+  State<AdminAddPlayers> createState() => _AdminAddPlayers();
 }
 
 class _AdminAddPlayers extends State<AdminAddPlayers> {
@@ -1175,14 +1177,11 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
     dbQuery = FirebaseDatabase.instance.ref().child('Players');
   }
 
-
   Widget listItem({required Map thisPlayer}) {
     return Padding(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
       child: Container(
-        decoration: BoxDecoration(
-            color: Color.fromRGBO(229, 227, 221, 1.0)
-        ),
+        decoration: BoxDecoration(color: Color.fromRGBO(229, 227, 221, 1.0)),
         child: Row(
           children: [
             Expanded(
@@ -1190,39 +1189,39 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
               child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       elevation: (0),
-                      padding: (
-                          EdgeInsets.only(top: 10.w, bottom: 10.w)),
-                      backgroundColor: Color.fromRGBO(
-                          201, 169, 101, 1.0)),
+                      padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
+                      backgroundColor: Color.fromRGBO(201, 169, 101, 1.0)),
                   onPressed: () {},
                   child: Container(
                       child: Column(children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
-                          child: Text(thisPlayer['name'], style: TextStyle(
-                              fontSize: 15.w, color: Colors.black),),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(bottom: 5.w),
-                          child: Text(thisPlayer['contact'], style: TextStyle(
-                              fontSize: 15.w, color: Colors.black),),
-                        )
-                      ])
-                  )
-              ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
+                      child: Text(
+                        thisPlayer['name'],
+                        style: TextStyle(fontSize: 15.w, color: Colors.black),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 5.w),
+                      child: Text(
+                        thisPlayer['contact'],
+                        style: TextStyle(fontSize: 15.w, color: Colors.black),
+                      ),
+                    )
+                  ]))),
             ),
             Expanded(
               flex: 1,
               child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       elevation: (0),
-                      padding: (
-                          EdgeInsets.only(top: 10.w, bottom: 10.w)),
+                      padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
                       backgroundColor: Color.fromRGBO(229, 227, 221, 1.0)),
                   onPressed: () {},
-                  child: Text("Remove",
-                    style: TextStyle(fontSize: 15.w, color: Colors.black),)
-              ),
+                  child: Text(
+                    "Remove",
+                    style: TextStyle(fontSize: 15.w, color: Colors.black),
+                  )),
             ),
           ],
         ),
@@ -1251,10 +1250,7 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
                   child: Container(
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width,
+                      width: MediaQuery.of(context).size.width,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1267,17 +1263,17 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
                             ),
                           ),
                           Padding(
-                            padding:
-                            EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
+                            padding: EdgeInsets.only(
+                                top: 2.w, left: 30.w, right: 30.w),
                             child: TextField(
                               controller: playerNameController,
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
-                                      color: Color.fromRGBO(
-                                          194, 173, 129, 1.0)),
+                                      color:
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- M.S.Dhoni"),
-                              style:
-                              (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                              style: (TextStyle(
+                                  color: Colors.indigo, fontSize: 15.w)),
                             ),
                           ),
                           Padding(
@@ -1289,41 +1285,41 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
                             ),
                           ),
                           Padding(
-                            padding:
-                            EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
+                            padding: EdgeInsets.only(
+                                top: 2.w, left: 30.w, right: 30.w),
                             child: TextField(
                               controller: contactNumberController,
                               keyboardType: TextInputType.number,
                               maxLength: 10,
                               decoration: const InputDecoration(
                                   hintStyle: TextStyle(
-                                      color: Color.fromRGBO(
-                                          194, 173, 129, 1.0)),
+                                      color:
+                                          Color.fromRGBO(194, 173, 129, 1.0)),
                                   hintText: "eg:- 077XXXXXXX"),
-                              style:
-                              (TextStyle(color: Colors.indigo, fontSize: 15.w)),
+                              style: (TextStyle(
+                                  color: Colors.indigo, fontSize: 15.w)),
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.only(left: 30.w),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color.fromRGBO(
-                                      112, 79, 25, 1.0)
-                              ),
+                                  backgroundColor:
+                                      const Color.fromRGBO(112, 79, 25, 1.0)),
                               onPressed: () {
                                 setState(() {
                                   uuid = Uuid().v4();
-                                  dbRef2 =
-                                      FirebaseDatabase.instance.ref().child(
-                                          'Players').child(uuid);
+                                  dbRef2 = FirebaseDatabase.instance
+                                      .ref()
+                                      .child('Players')
+                                      .child(uuid);
                                 });
                                 Map<String, String> players = {
                                   'name': playerNameController.text.trim(),
-                                  'contact': contactNumberController.text
-                                      .toString(),
+                                  'contact':
+                                      contactNumberController.text.toString(),
                                   'id': uuid,
-                                  'isAdded':""
+                                  'isAdded': ""
                                 };
                                 dbRef2.set(players);
                               },
@@ -1335,8 +1331,7 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
                             ),
                           ),
                         ],
-                      )
-                  ),
+                      )),
                 ),
               ),
             ),
@@ -1366,31 +1361,44 @@ class AdminSelectPlayersToTeam extends StatefulWidget {
   const AdminSelectPlayersToTeam({super.key});
 
   @override
-  State<AdminSelectPlayersToTeam> createState() =>
-      _AdminSelectPlayersToTeam();
+  State<AdminSelectPlayersToTeam> createState() => _AdminSelectPlayersToTeam();
 }
 
 class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
   late DatabaseReference dbRef2;
   late Query dbQuery;
-  bool isAdded=false;
+  bool isAdded = false;
 
   @override
   void initState() {
     super.initState();
     dbQuery = FirebaseDatabase.instance.ref().child('Players');
+    updateIsAdded();
   }
 
+  void updateIsAdded() {
+    DatabaseReference dbRef =
+        FirebaseDatabase.instance.reference().child("Players");
+
+    dbRef.once().then((DatabaseEvent event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        Map<String, dynamic> players =
+            Map<String, dynamic>.from(snapshot.value as Map<dynamic, dynamic>);
+        players.forEach((key, value) {
+          dbRef.child(key).update({"isAdded": "false"});
+        });
+      }
+    });
+  }
 
   Widget listItem({required Map thisPlayer}) {
-    String? id=thisPlayer['id'];
-    String? playerAdded=thisPlayer['isAdded'];
+    String? id = thisPlayer['id'];
+    String? playerAdded = thisPlayer['isAdded'];
     return Padding(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
       child: Container(
-        decoration: BoxDecoration(
-            color: Color.fromRGBO(229, 227, 221, 1.0)
-        ),
+        decoration: BoxDecoration(color: Color.fromRGBO(229, 227, 221, 1.0)),
         child: Row(
           children: [
             Expanded(
@@ -1398,50 +1406,52 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
               child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       elevation: (0),
-                      padding: (
-                          EdgeInsets.only(top: 10.w, bottom: 10.w)),
-                      backgroundColor: Color.fromRGBO(
-                          201, 169, 101, 1.0)),
+                      padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
+                      backgroundColor: Color.fromRGBO(201, 169, 101, 1.0)),
                   onPressed: () {},
                   child: Container(
                       child: Column(children: [
-                        Padding(
-                          padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
-                          child: Text(thisPlayer['name'], style: TextStyle(
-                              fontSize: 15.w, color: Colors.black),),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(bottom: 5.w),
-                          child: Text(thisPlayer['contact'], style: TextStyle(
-                              fontSize: 15.w, color: Colors.black),),
-                        )
-                      ])
-                  )
-              ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
+                      child: Text(
+                        thisPlayer['name'],
+                        style: TextStyle(fontSize: 15.w, color: Colors.black),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 5.w),
+                      child: Text(
+                        thisPlayer['contact'],
+                        style: TextStyle(fontSize: 15.w, color: Colors.black),
+                      ),
+                    )
+                  ]))),
             ),
             Expanded(
               flex: 1,
               child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       elevation: (0),
-                      padding: (
-                          EdgeInsets.only(top: 10.w, bottom: 10.w)),
+                      padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
                       backgroundColor: Color.fromRGBO(229, 227, 221, 1.0)),
                   onPressed: () {
                     setState(() {
-                      dbRef2 =
-                          FirebaseDatabase.instance.ref().child(
-                              'Players').child(id.toString());
-                      isAdded= (playerAdded !="true")? false:true;
-                      isAdded=!isAdded;
+                      dbRef2 = FirebaseDatabase.instance
+                          .ref()
+                          .child('Players')
+                          .child(id.toString());
+                      isAdded = (playerAdded != "true") ? false : true;
+                      isAdded = !isAdded;
                     });
                     Map<String, String> thisPlayer = {
-                      'isAdded':isAdded.toString()
+                      'isAdded': isAdded.toString()
                     };
                     dbRef2.update(thisPlayer);
                   },
-                  child: Text((thisPlayer['isAdded']=="true")?"Remove":"Add", style: TextStyle(fontSize: 15.w, color: Colors.black),)
-              ),
+                  child: Text(
+                    (thisPlayer['isAdded'] == "true") ? "Remove" : "Add",
+                    style: TextStyle(fontSize: 15.w, color: Colors.black),
+                  )),
             ),
           ],
         ),
@@ -1463,7 +1473,7 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
           Expanded(
             flex: 9,
             child: Padding(
-              padding: EdgeInsets.only(bottom: 25.w,top:25.w),
+              padding: EdgeInsets.only(bottom: 25.w, top: 25.w),
               child: FirebaseAnimatedList(
                 query: dbQuery,
                 itemBuilder: (BuildContext context, DataSnapshot snapshot,
