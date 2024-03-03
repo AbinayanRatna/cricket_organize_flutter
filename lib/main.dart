@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:path/path.dart' as Path;
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as Path;
 import 'package:uuid/uuid.dart';
 
 void main() async {
@@ -36,7 +37,7 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(builder: (_, child) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: AdminAddTeams(),
+        home: AdminSelectTournamentPage(),
       );
     });
   }
@@ -507,13 +508,14 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
   DatabaseReference referenceTournament =
       FirebaseDatabase.instance.ref().child('Tournaments');
   late DatabaseReference referenceMatches;
+  String uuid = "";
 
   @override
   void initState() {
     super.initState();
-    dbQuery = FirebaseDatabase.instance.ref().child('Matches/${widget.uuid}');
-    referenceMatches =
-        FirebaseDatabase.instance.ref().child('Matches/${widget.uuid}');
+    dbQuery = FirebaseDatabase.instance
+        .ref()
+        .child('Tournaments/${widget.uuid}/Matches');
   }
 
   Widget listItem({required Map thisMatch}) {
@@ -529,7 +531,8 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
               ? Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const AdminConfigureMatches()),
+                      builder: (context) => AdminAddTeamToMatches(
+                          tId: widget.uuid, mId: thisMatch['id'])),
                   (route) => false)
               : Null;
         },
@@ -557,11 +560,22 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                     padding: EdgeInsets.all(28.w),
                     child: InkWell(
                       onTap: () {
+                        setState(() {
+                          uuid = Uuid().v4();
+                          referenceMatches = FirebaseDatabase.instance
+                              .ref()
+                              .child('Tournaments/${widget.uuid}/Matches')
+                              .child(uuid);
+                        });
                         // this onTap
                         Fluttertoast.showToast(
                             msg: "msg", toastLength: Toast.LENGTH_SHORT);
-                        Map<String, String> matches = {"definedOrNot": "Not"};
-                        referenceMatches.push().set(matches);
+                        Map<String, String> matches = {
+                          "id": uuid,
+                          "definedOrNot": "Not"
+                        };
+
+                        referenceMatches.set(matches);
                       },
                       child: Container(
                           child: Icon(Icons.add_circle,
@@ -591,280 +605,142 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
   }
 }
 
-class AdminConfigureMatches extends StatefulWidget {
-  const AdminConfigureMatches({super.key});
+class AdminAddTeamToMatches extends StatefulWidget {
+  final String? tId;
+  final String? mId;
+
+  const AdminAddTeamToMatches(
+      {super.key, required this.tId, required this.mId});
 
   @override
-  State<AdminConfigureMatches> createState() => _AdminConfigureMatches();
+  State<AdminAddTeamToMatches> createState() => _AdminAddTeamToMatches();
 }
 
-class _AdminConfigureMatches extends State<AdminConfigureMatches> {
+class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
   late DatabaseReference dbRef2;
-  bool isTennisBall = false;
-  bool isLeatherBall = false;
-  TextEditingController tournamentNameController = TextEditingController();
-  TextEditingController playersAmountController = TextEditingController();
-  TextEditingController oversAmountController = TextEditingController();
-  TextEditingController oversForOneBowlerController = TextEditingController();
-  TextEditingController ballsInOneOverController = TextEditingController();
-  TextEditingController matchesAmountController = TextEditingController();
-  String ballType = "";
-  String uuid = Uuid().v4();
+  Query dbQuery = FirebaseDatabase.instance.ref().child('Teams');
+  bool isAdded = false;
 
   @override
   void initState() {
     super.initState();
-    dbRef2 = FirebaseDatabase.instance.ref().child('Tournaments').child(uuid);
+    dbRef2 = FirebaseDatabase.instance
+        .ref()
+        .child('Tournaments')
+        .child(widget.tId!)
+        .child('Matches')
+        .child(widget.mId!);
+  }
+
+  Widget listItem({required Map thisTeam}) {
+    String? id = thisTeam['id'];
+    String? name = thisTeam['name'];
+    String? playerAdded = thisTeam['isAdded'];
+    return Padding(
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
+      child: Container(
+        decoration: BoxDecoration(color: Color.fromRGBO(229, 227, 221, 1.0)),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      elevation: (0),
+                      padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
+                      backgroundColor: Color.fromRGBO(201, 169, 101, 1.0)),
+                  onPressed: () {},
+                  child: Container(
+                      child: Padding(
+                    padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
+                    child: Text(
+                      thisTeam['name'],
+                      style: TextStyle(fontSize: 15.w, color: Colors.black),
+                    ),
+                  ))),
+            ),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      elevation: (0),
+                      padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
+                      backgroundColor: Color.fromRGBO(229, 227, 221, 1.0)),
+                  onPressed: () {
+                    setState(() {});
+                  },
+                  child: Text("Add")),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Create tournament", style: TextStyle(fontSize: 20.sp)),
+        title: Text("Configure match", style: TextStyle(fontSize: 20.sp)),
         backgroundColor: const Color.fromRGBO(197, 139, 48, 1.0),
         toolbarHeight: 45.w,
       ),
       body: Column(
         children: [
           Expanded(
-            flex: 3,
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              child: Image.asset(
-                "assets/add_tournament.jpg",
-                fit: BoxFit.cover,
+            flex: 2,
+            child: Padding(
+              padding: EdgeInsets.only(top: 20.w,left:30.w),
+              child: Align(
+                alignment: Alignment.topLeft,
+                  child: Text("Team A",
+                      style: TextStyle(
+                          fontSize: 15.w,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold))),
+            ),
+          ),
+          Expanded(
+            flex: 13,
+            child: Padding(
+              padding: EdgeInsets.only(top:10.w,bottom: 25.w),
+              child: FirebaseAnimatedList(
+                query: dbQuery,
+                itemBuilder: (BuildContext context, DataSnapshot snapshot,
+                    Animation<double> animation, int index) {
+                  Map teams = snapshot.value as Map;
+                  teams['key'] = snapshot.key;
+                  return listItem(thisTeam: teams);
+                },
               ),
             ),
           ),
           Expanded(
-            flex: 9,
-            child: Container(
-              width: (MediaQuery.of(context).size.width),
-              height: (MediaQuery.of(context).size.height),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: 25.w, left: 30.w),
-                      child: Text(
-                        "Tournament name:",
-                        style: TextStyle(color: Colors.black, fontSize: 15.w),
-                      ),
-                    ),
-                    Padding(
-                      padding:
-                          EdgeInsets.only(top: 2.w, left: 30.w, right: 30.w),
-                      child: TextField(
-                        controller: tournamentNameController,
-                        decoration: const InputDecoration(
-                            hintStyle: TextStyle(
-                                color: Color.fromRGBO(194, 173, 129, 1.0)),
-                            hintText: "eg:- Indian Premier League"),
-                        style:
-                            (TextStyle(color: Colors.indigo, fontSize: 15.w)),
-                      ),
-                    ),
-                    Padding(
-                      padding:
-                          EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
-                      child: Row(children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            "Players in a team: ",
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 15.w),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            "Overs per team: ",
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 15.w),
-                          ),
-                        )
-                      ]),
-                    ),
-                    Padding(
-                      padding:
-                          EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
-                      child: Row(children: [
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 15.w),
-                            child: TextField(
-                              controller: playersAmountController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                  hintStyle: TextStyle(
-                                      color:
-                                          Color.fromRGBO(194, 173, 129, 1.0)),
-                                  hintText: "eg:- 11"),
-                              style: (TextStyle(
-                                  color: Colors.indigo, fontSize: 15.w)),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 15.w),
-                            child: TextField(
-                              controller: oversAmountController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                  hintStyle: TextStyle(
-                                      color:
-                                          Color.fromRGBO(194, 173, 129, 1.0)),
-                                  hintText: "eg:- 20"),
-                              style: (TextStyle(
-                                  color: Colors.indigo, fontSize: 15.w)),
-                            ),
-                          ),
-                        )
-                      ]),
-                    ),
-                    Padding(
-                      padding:
-                          EdgeInsets.only(left: 30.w, top: 25.w, right: 30.w),
-                      child: Row(children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            "Overs for a bowler: ",
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 15.w),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            "Balls in a over: ",
-                            style:
-                                TextStyle(color: Colors.black, fontSize: 15.w),
-                          ),
-                        )
-                      ]),
-                    ),
-                    Padding(
-                      padding:
-                          EdgeInsets.only(left: 30.w, top: 2.w, right: 30.w),
-                      child: Row(children: [
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 15.w),
-                            child: TextField(
-                              controller: oversForOneBowlerController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                  hintStyle: TextStyle(
-                                      color:
-                                          Color.fromRGBO(194, 173, 129, 1.0)),
-                                  hintText: "eg:- 4"),
-                              style: (TextStyle(
-                                  color: Colors.indigo, fontSize: 15.w)),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 15.w),
-                            child: TextField(
-                              controller: ballsInOneOverController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                  hintStyle: TextStyle(
-                                      color:
-                                          Color.fromRGBO(194, 173, 129, 1.0)),
-                                  hintText: "eg:- 6"),
-                              style: (TextStyle(
-                                  color: Colors.indigo, fontSize: 15.w)),
-                            ),
-                          ),
-                        )
-                      ]),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 15.w, left: 30.w),
-                      child: Text(
-                        "Ball type:",
-                        style: TextStyle(color: Colors.black, fontSize: 15.w),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 15.w),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: Padding(
-                              padding: EdgeInsets.only(left: 30.w, right: 15.w),
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  elevation: 0,
-                                  backgroundColor:
-                                      (isTennisBall) ? Colors.red : Colors.blue,
-                                  // onPrimary: Colors.white,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    isTennisBall = true;
-                                    isLeatherBall = false;
-                                  });
-                                },
-                                child: Padding(
-                                  padding:
-                                      EdgeInsets.only(top: 10.w, bottom: 10.w),
-                                  child: Text(
-                                    "Tennis",
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 15.w),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Padding(
-                              padding: EdgeInsets.only(right: 30.w, left: 15.w),
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  elevation: 0,
-                                  backgroundColor: (isLeatherBall)
-                                      ? Colors.red
-                                      : Colors.blue,
-                                  foregroundColor: Colors.white,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    isLeatherBall = true;
-                                    isTennisBall = false;
-                                  });
-                                },
-                                child: Padding(
-                                  padding:
-                                      EdgeInsets.only(top: 10.w, bottom: 10.w),
-                                  child: Text(
-                                    "Leather",
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 15.w),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+            flex: 2,
+            child: Padding(
+              padding:  EdgeInsets.only(left:30.w),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text("Team B",
+                    style: TextStyle(
+                        fontSize: 15.w,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 13,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 25.w),
+              child: FirebaseAnimatedList(
+                query: dbQuery,
+                itemBuilder: (BuildContext context, DataSnapshot snapshot,
+                    Animation<double> animation, int index) {
+                  Map teams = snapshot.value as Map;
+                  teams['key'] = snapshot.key;
+                  return listItem(thisTeam: teams);
+                },
               ),
             ),
           ),
@@ -910,6 +786,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                       borderRadius: BorderRadius.all(Radius.zero)),
                 ),
                 onPressed: () {
+                  /*
                   ballType = (isTennisBall) ? "Tennis ball" : "Leather Ball";
                   Map<String, String> tournament = {
                     'id': uuid,
@@ -927,6 +804,7 @@ class _AdminConfigureMatches extends State<AdminConfigureMatches> {
                         builder: (context) => const AdminSelectTournamentPage(),
                       ),
                       (route) => false);
+                   */
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -960,9 +838,9 @@ class _AdminAddTeams extends State<AdminAddTeams> {
   TextEditingController shortNameController = TextEditingController();
   String ballType = "";
   String uuid = Uuid().v4();
-  late String image_url ;
-   File? image;
+  late String image_url;
 
+  File? image;
 
   Future pickImage() async {
     try {
@@ -976,8 +854,7 @@ class _AdminAddTeams extends State<AdminAddTeams> {
     var imageFile = File(image!.path);
     String fileName = Path.basename(imageFile.path);
     FirebaseStorage storage = FirebaseStorage.instance;
-    Reference ref =
-    storage.ref().child("Team logo" + fileName);
+    Reference ref = storage.ref().child("Team logo" + fileName);
     UploadTask uploadTask = ref.putFile(imageFile);
     await uploadTask.whenComplete(() async {
       var url = await ref.getDownloadURL();
@@ -1030,14 +907,17 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                                 height: MediaQuery.of(context).size.height / 5,
                                 width: MediaQuery.of(context).size.width / 3),
                             Padding(
-                              padding: EdgeInsets.only(left:30.w),
+                              padding: EdgeInsets.only(left: 30.w),
                               child: ElevatedButton(
                                 onPressed: () {
                                   pickImage();
                                 },
                                 child: Padding(
-                                  padding:  EdgeInsets.only(top:10.w,bottom:10.w),
-                                  child: Text("Select logo",style: TextStyle(color: Colors.white, fontSize: 20.w)),
+                                  padding:
+                                      EdgeInsets.only(top: 10.w, bottom: 10.w),
+                                  child: Text("Select logo",
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 20.w)),
                                 ),
                               ),
                             )
@@ -1139,7 +1019,12 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                     'image': image_url,
                   };
                   dbRef2.set(teams);
-                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>AdminSelectPlayersToTeam(teamUuid: uuid)), (route) => false);
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              AdminSelectPlayersToTeam(teamUuid: uuid)),
+                      (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -1359,7 +1244,8 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
 
 class AdminSelectPlayersToTeam extends StatefulWidget {
   final String teamUuid;
-  const AdminSelectPlayersToTeam({super.key,required this.teamUuid});
+
+  const AdminSelectPlayersToTeam({super.key, required this.teamUuid});
 
   @override
   State<AdminSelectPlayersToTeam> createState() => _AdminSelectPlayersToTeam();
@@ -1379,8 +1265,7 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
   }
 
   void updateIsAdded() {
-    DatabaseReference dbRef =
-        FirebaseDatabase.instance.ref().child("Players");
+    DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("Players");
 
     dbRef.once().then((DatabaseEvent event) {
       DataSnapshot snapshot = event.snapshot;
@@ -1453,12 +1338,16 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
                     Map<String, String> thisPlayer = {
                       'isAdded': isAdded.toString()
                     };
-                    Map<String,String> thisPlayerToTeam={
-                      id!:name!,
+                    Map<String, String> thisPlayerToTeam = {
+                      id!: name!,
                     };
                     dbRef2.update(thisPlayer);
-                    thisPlayer['isAdded'] == "true" ? dbRef3.child('Players').update(thisPlayerToTeam):null;
-                    thisPlayer['isAdded'] == "false" ? dbRef3.child('Players').child(id).remove():null;
+                    thisPlayer['isAdded'] == "true"
+                        ? dbRef3.child('Players').update(thisPlayerToTeam)
+                        : null;
+                    thisPlayer['isAdded'] == "false"
+                        ? dbRef3.child('Players').child(id).remove()
+                        : null;
                   },
                   child: Text(
                     (thisPlayer['isAdded'] == "true") ? "Remove" : "Add",
