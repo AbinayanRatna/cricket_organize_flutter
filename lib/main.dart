@@ -532,7 +532,10 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                   context,
                   MaterialPageRoute(
                       builder: (context) => AdminAddTeamToMatches(
-                          tId: widget.uuid, mId: thisMatch['id'],tName:widget.tournamentName ,)),
+                            tId: widget.uuid,
+                            mId: thisMatch['id'],
+                            tName: widget.tournamentName,
+                          )),
                   (route) => false)
               : Null;
         },
@@ -573,8 +576,8 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                         Map<String, String> matches = {
                           "id": uuid,
                           "definedOrNot": "Not",
-                          "TeamA-defined":"Not",
-                          "TeamB-defined":"Not",
+                          "TeamA-defined": "Not",
+                          "TeamB-defined": "Not",
                         };
 
                         referenceMatches.set(matches);
@@ -611,8 +614,9 @@ class AdminAddTeamToMatches extends StatefulWidget {
   final String? tId;
   final String? mId;
   final String? tName;
+
   const AdminAddTeamToMatches(
-      {super.key, required this.tId, required this.mId,required this.tName});
+      {super.key, required this.tId, required this.mId, required this.tName});
 
   @override
   State<AdminAddTeamToMatches> createState() => _AdminAddTeamToMatches();
@@ -625,13 +629,29 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
   Query dbQuery = FirebaseDatabase.instance.ref().child('Teams');
   bool isAddedTeam1 = false;
   bool isAddedTeam2 = false;
-  bool isTeam_A_Added=false;
-  bool isTeam_B_Added=false;
+  bool isTeam_A_Added = false;
+  bool isTeam_B_Added = false;
 
   @override
   void initState() {
     super.initState();
+    updateIsAdded();
+  }
 
+  void updateIsAdded() {
+    DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("Teams");
+
+    dbRef.once().then((DatabaseEvent event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        Map<String, dynamic> teams =
+            Map<String, dynamic>.from(snapshot.value as Map<dynamic, dynamic>);
+        teams.forEach((key, value) {
+          dbRef.child(key).update({"state as team A": "not"});
+          dbRef.child(key).update({"state as team B": "not"});
+        });
+      }
+    });
   }
 
   Widget listItemTeamA({required Map thisTeam}) {
@@ -651,8 +671,7 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                       elevation: (0),
                       padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
                       backgroundColor: Color.fromRGBO(201, 169, 101, 1.0)),
-                  onPressed: () {
-                  },
+                  onPressed: () {},
                   child: Container(
                       child: Padding(
                     padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
@@ -670,11 +689,19 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                       padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
                       backgroundColor: Color.fromRGBO(229, 227, 221, 1.0)),
                   onPressed: () {
-                    if(teamsAdded=='true' || isAddedTeam1==false){
+                    if (teamsAdded == 'true' || isAddedTeam1 == false) {
                       setState(() {
-                        dbRef1 = FirebaseDatabase.instance.ref().child('Tournaments').child(widget.tId!).child('Matches').child(widget.mId!);
+                        dbRef1 = FirebaseDatabase.instance
+                            .ref()
+                            .child('Tournaments')
+                            .child(widget.tId!)
+                            .child('Matches')
+                            .child(widget.mId!);
                         //dbRef2 = FirebaseDatabase.instance.ref().child('Tournaments').child(widget.tId!).child('Matches').child(widget.mId!).child('Team-A');
-                        dbRef2 = FirebaseDatabase.instance.ref().child('Teams').child(id!);
+                        dbRef2 = FirebaseDatabase.instance
+                            .ref()
+                            .child('Teams')
+                            .child(id!);
                         isAddedTeam1 = (teamsAdded != "true") ? false : true;
                         isAddedTeam1 = !isAddedTeam1;
                       });
@@ -685,21 +712,26 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
 
                       Map<String, String> thisTeamToMatch = {
                         'name': thisTeam['name']!,
-                        'id':thisTeam['id']!,
+                        'id': thisTeam['id']!,
                       };
                       Map<String, String> updateAddingofTeam = {
                         'TeamA-defined': isAddedTeam1.toString()
                       };
 
-
                       dbRef1.update(updateAddingofTeam);
-                      isAddedTeam1  ? dbRef1.child('Team-A').set(thisTeamToMatch) : null;
+                      isAddedTeam1
+                          ? dbRef1.child('Team-A').set(thisTeamToMatch)
+                          : null;
                       !isAddedTeam1 ? dbRef1.child('Team-A').remove() : null;
-                    }else{
-                      Fluttertoast.showToast(msg: "Only one can be selected",toastLength: Toast.LENGTH_SHORT);
+                    } else {
+                      Fluttertoast.showToast(
+                          msg: "Only one can be selected",
+                          toastLength: Toast.LENGTH_SHORT);
                     }
                   },
-                  child: Text(thisTeam['state as team A']!='true'?"Add":"Remove",style:TextStyle(color: Colors.black))),
+                  child: Text(
+                      thisTeam['state as team A'] != 'true' ? "Add" : "Remove",
+                      style: TextStyle(color: Colors.black))),
             ),
           ],
         ),
@@ -723,17 +755,18 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                   style: ElevatedButton.styleFrom(
                       elevation: (0),
                       padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
-                      backgroundColor: isAddedTeam1==true ? Color.fromRGBO(201, 169, 101, 1.0):Color.fromRGBO(222, 217, 206, 1.0)),
-                  onPressed: () {
-                  },
+                      backgroundColor: isAddedTeam1 == true
+                          ? Color.fromRGBO(201, 169, 101, 1.0)
+                          : Color.fromRGBO(222, 217, 206, 1.0)),
+                  onPressed: () {},
                   child: Container(
                       child: Padding(
-                        padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
-                        child: Text(
-                          thisTeam['name'],
-                          style: TextStyle(fontSize: 15.w, color: Colors.black),
-                        ),
-                      ))),
+                    padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
+                    child: Text(
+                      thisTeam['name'],
+                      style: TextStyle(fontSize: 15.w, color: Colors.black),
+                    ),
+                  ))),
             ),
             Expanded(
               flex: 1,
@@ -743,12 +776,21 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                       padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
                       backgroundColor: Color.fromRGBO(229, 227, 221, 1.0)),
                   onPressed: () {
-                    if(isAddedTeam1==true && thisTeam['state as team A']!='true'){
-                      if(teamsAdded=='true' || isAddedTeam2==false){
+                    if (isAddedTeam1 == true &&
+                        thisTeam['state as team A'] != 'true') {
+                      if (teamsAdded == 'true' || isAddedTeam2 == false) {
                         setState(() {
-                          dbRef1 = FirebaseDatabase.instance.ref().child('Tournaments').child(widget.tId!).child('Matches').child(widget.mId!);
+                          dbRef1 = FirebaseDatabase.instance
+                              .ref()
+                              .child('Tournaments')
+                              .child(widget.tId!)
+                              .child('Matches')
+                              .child(widget.mId!);
                           //dbRef2 = FirebaseDatabase.instance.ref().child('Tournaments').child(widget.tId!).child('Matches').child(widget.mId!).child('Team-A');
-                          dbRef2 = FirebaseDatabase.instance.ref().child('Teams').child(id!);
+                          dbRef2 = FirebaseDatabase.instance
+                              .ref()
+                              .child('Teams')
+                              .child(id!);
                           isAddedTeam2 = (teamsAdded != "true") ? false : true;
                           isAddedTeam2 = !isAddedTeam2;
                         });
@@ -759,30 +801,38 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
 
                         Map<String, String> thisTeamToMatch = {
                           'name': thisTeam['name']!,
-                          'id':thisTeam['id']!,
+                          'id': thisTeam['id']!,
                         };
                         Map<String, String> updateAddingofTeam = {
                           'TeamB-defined': isAddedTeam2.toString(),
-                          'definedOrNot':isAddedTeam2.toString()
+                          'definedOrNot': isAddedTeam2.toString()
                         };
 
-
                         dbRef1.update(updateAddingofTeam);
-                        isAddedTeam2  ? dbRef1.child('Team-B').set(thisTeamToMatch) : null;
+                        isAddedTeam2
+                            ? dbRef1.child('Team-B').set(thisTeamToMatch)
+                            : null;
                         !isAddedTeam2 ? dbRef1.child('Team-B').remove() : null;
-                      }else{
-                        Fluttertoast.showToast(msg: "Only one can be selected",toastLength: Toast.LENGTH_SHORT);
+                      } else {
+                        Fluttertoast.showToast(
+                            msg: "Only one can be selected",
+                            toastLength: Toast.LENGTH_SHORT);
                       }
-                    }else{
-                      if(isAddedTeam1!=true){
-                        Fluttertoast.showToast(msg: "Please assign team A first",toastLength: Toast.LENGTH_SHORT);
-                      }else{
-                        Fluttertoast.showToast(msg: "Same team cannot be selected twice",toastLength: Toast.LENGTH_SHORT);
+                    } else {
+                      if (isAddedTeam1 != true) {
+                        Fluttertoast.showToast(
+                            msg: "Please assign team A first",
+                            toastLength: Toast.LENGTH_SHORT);
+                      } else {
+                        Fluttertoast.showToast(
+                            msg: "Same team cannot be selected twice",
+                            toastLength: Toast.LENGTH_SHORT);
                       }
-
                     }
                   },
-                  child: Text(thisTeam['state as team B']!='true'?"Add":"Remove",style:TextStyle(color: Colors.black))),
+                  child: Text(
+                      thisTeam['state as team B'] != 'true' ? "Add" : "Remove",
+                      style: TextStyle(color: Colors.black))),
             ),
           ],
         ),
@@ -803,9 +853,9 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
           Expanded(
             flex: 2,
             child: Padding(
-              padding: EdgeInsets.only(top: 20.w,left:30.w),
+              padding: EdgeInsets.only(top: 20.w, left: 30.w),
               child: Align(
-                alignment: Alignment.topLeft,
+                  alignment: Alignment.topLeft,
                   child: Text("Team A",
                       style: TextStyle(
                           fontSize: 15.w,
@@ -816,7 +866,7 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
           Expanded(
             flex: 13,
             child: Padding(
-              padding: EdgeInsets.only(top:10.w,bottom: 25.w),
+              padding: EdgeInsets.only(top: 10.w, bottom: 25.w),
               child: FirebaseAnimatedList(
                 query: dbQuery,
                 itemBuilder: (BuildContext context, DataSnapshot snapshot,
@@ -831,7 +881,7 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
           Expanded(
             flex: 2,
             child: Padding(
-              padding:  EdgeInsets.only(left:30.w),
+              padding: EdgeInsets.only(left: 30.w),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Text("Team B",
@@ -902,10 +952,13 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                   Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>  AdminMatchesConfigurePage(uuid: widget.tId!, tournamentName: widget.tName!),
+                        builder: (context) => AdminAddPlayersToTeamA(
+                            tId: widget.tId!,
+                            tName: widget.tName!,
+                            mId: widget.mId),
+                        //builder: (context) =>  AdminMatchesConfigurePage(uuid: widget.tId!, tournamentName: widget.tName!),
                       ),
                       (route) => false);
-
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -1118,13 +1171,15 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                     'name': teamNameController.text.trim(),
                     'short': shortNameController.text.trim(),
                     'image': image_url,
+                    'state as team A': "Not",
+                    'state as team B': "Not",
                   };
                   dbRef2.set(teams);
                   Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              AdminSelectPlayersToTeam(teamUuid: uuid)),
+                              AdminSelectTournamentPage()),
                       (route) => false);
                 },
                 child: Padding(
@@ -1305,7 +1360,8 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
                                   'contact':
                                       contactNumberController.text.toString(),
                                   'id': uuid,
-                                  'isAdded': ""
+                                  "isAddedToTeamB": "false",
+                                  "isAddedToTeamA": "false"
                                 };
                                 dbRef2.set(players);
                               },
@@ -1343,47 +1399,48 @@ class _AdminAddPlayers extends State<AdminAddPlayers> {
   }
 }
 
-class AdminSelectPlayersToTeam extends StatefulWidget {
-  final String teamUuid;
+class AdminAddPlayersToTeamA extends StatefulWidget {
+  final String? tId;
+  final String? mId;
+  final String? tName;
 
-  const AdminSelectPlayersToTeam({super.key, required this.teamUuid});
+  const AdminAddPlayersToTeamA(
+      {super.key, required this.tId, required this.mId, required this.tName});
 
   @override
-  State<AdminSelectPlayersToTeam> createState() => _AdminSelectPlayersToTeam();
+  State<AdminAddPlayersToTeamA> createState() => _AdminAddPlayersToTeamA();
 }
 
-class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
+class _AdminAddPlayersToTeamA extends State<AdminAddPlayersToTeamA> {
+  late DatabaseReference dbRef1;
   late DatabaseReference dbRef2;
-  late DatabaseReference dbRef3;
-  late Query dbQuery;
-  bool isAdded = false;
+  Query dbQuery = FirebaseDatabase.instance.ref().child('Players');
+  bool isAddedTeam1 = false;
 
   @override
   void initState() {
     super.initState();
-    dbQuery = FirebaseDatabase.instance.ref().child('Players');
     updateIsAdded();
   }
 
   void updateIsAdded() {
     DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("Players");
-
     dbRef.once().then((DatabaseEvent event) {
       DataSnapshot snapshot = event.snapshot;
       if (snapshot.value != null) {
         Map<String, dynamic> players =
             Map<String, dynamic>.from(snapshot.value as Map<dynamic, dynamic>);
         players.forEach((key, value) {
-          dbRef.child(key).update({"isAdded": "new"});
+          dbRef.child(key).update({"isAddedToTeamA": "false"});
+          dbRef.child(key).update({"isAddedToTeamB": "false"});
         });
       }
     });
   }
 
-  Widget listItem({required Map thisPlayer}) {
+  Widget listItemPlayersForTeamA({required Map thisPlayer}) {
     String? id = thisPlayer['id'];
-    String? name = thisPlayer['name'];
-    String? playerAdded = thisPlayer['isAdded'];
+    String? teamsAdded = thisPlayer['isAddedToTeamA'];
     return Padding(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
       child: Container(
@@ -1399,22 +1456,13 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
                       backgroundColor: Color.fromRGBO(201, 169, 101, 1.0)),
                   onPressed: () {},
                   child: Container(
-                      child: Column(children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
-                      child: Text(
-                        thisPlayer['name'],
-                        style: TextStyle(fontSize: 15.w, color: Colors.black),
-                      ),
+                      child: Padding(
+                    padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
+                    child: Text(
+                      thisPlayer['name'],
+                      style: TextStyle(fontSize: 15.w, color: Colors.black),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 5.w),
-                      child: Text(
-                        thisPlayer['contact'],
-                        style: TextStyle(fontSize: 15.w, color: Colors.black),
-                      ),
-                    )
-                  ]))),
+                  ))),
             ),
             Expanded(
               flex: 1,
@@ -1424,36 +1472,53 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
                       padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
                       backgroundColor: Color.fromRGBO(229, 227, 221, 1.0)),
                   onPressed: () {
+                    //  if (teamsAdded == 'true' || isAddedTeam1 == false) {
                     setState(() {
+                      dbRef1 = FirebaseDatabase.instance
+                          .ref()
+                          .child('Tournaments')
+                          .child(widget.tId!)
+                          .child('Matches')
+                          .child(widget.mId!);
+                      //dbRef2 = FirebaseDatabase.instance.ref().child('Tournaments').child(widget.tId!).child('Matches').child(widget.mId!).child('Team-A');
                       dbRef2 = FirebaseDatabase.instance
                           .ref()
                           .child('Players')
-                          .child(id.toString());
-                      dbRef3 = FirebaseDatabase.instance
-                          .ref()
-                          .child('Teams')
-                          .child(widget.teamUuid);
-                      isAdded = (playerAdded != "true") ? false : true;
-                      isAdded = !isAdded;
+                          .child(id!);
+                      isAddedTeam1 = (teamsAdded != "true") ? false : true;
+                      isAddedTeam1 = !isAddedTeam1;
                     });
-                    Map<String, String> thisPlayer = {
-                      'isAdded': isAdded.toString()
+                    Map<String, String> updatetThisTeam = {
+                      'isAddedToTeamA': isAddedTeam1.toString()
                     };
-                    Map<String, String> thisPlayerToTeam = {
-                      id!: name!,
+                    dbRef2.update(updatetThisTeam);
+
+                    Map<String, String> thisTeamToMatch = {
+                      'name': thisPlayer['name']!,
+                      'id': thisPlayer['id']!,
                     };
-                    dbRef2.update(thisPlayer);
-                    thisPlayer['isAdded'] == "true"
-                        ? dbRef3.child('Players').update(thisPlayerToTeam)
+
+                    isAddedTeam1
+                        ? dbRef1
+                            .child('Team-A')
+                            .child('Players')
+                            .child(thisPlayer['id'])
+                            .set(thisTeamToMatch)
                         : null;
-                    thisPlayer['isAdded'] == "false"
-                        ? dbRef3.child('Players').child(id).remove()
+                    !isAddedTeam1
+                        ? dbRef1
+                            .child('Team-A')
+                            .child('Players')
+                            .child(thisPlayer['id'])
+                            .remove()
                         : null;
+                    // } else {
+                    //   Fluttertoast.showToast(msg: "Only one can be selected", toastLength: Toast.LENGTH_SHORT);
+                    // }
                   },
                   child: Text(
-                    (thisPlayer['isAdded'] == "true") ? "Remove" : "Add",
-                    style: TextStyle(fontSize: 15.w, color: Colors.black),
-                  )),
+                      thisPlayer['isAddedToTeamA'] != 'true' ? "Add" : "Remove",
+                      style: TextStyle(color: Colors.black))),
             ),
           ],
         ),
@@ -1464,30 +1529,333 @@ class _AdminSelectPlayersToTeam extends State<AdminSelectPlayersToTeam> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text("Select Players", style: TextStyle(fontSize: 20.sp)),
+        title: Text("Configure match", style: TextStyle(fontSize: 20.sp)),
         backgroundColor: const Color.fromRGBO(197, 139, 48, 1.0),
         toolbarHeight: 45.w,
       ),
       body: Column(
         children: [
           Expanded(
-            flex: 9,
+            flex: 2,
             child: Padding(
-              padding: EdgeInsets.only(bottom: 25.w, top: 25.w),
+              padding: EdgeInsets.only(top: 20.w, left: 30.w),
+              child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Text("Team A",
+                      style: TextStyle(
+                          fontSize: 15.w,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold))),
+            ),
+          ),
+          Expanded(
+            flex: 13,
+            child: Padding(
+              padding: EdgeInsets.only(top: 10.w, bottom: 25.w),
               child: FirebaseAnimatedList(
                 query: dbQuery,
                 itemBuilder: (BuildContext context, DataSnapshot snapshot,
                     Animation<double> animation, int index) {
                   Map players = snapshot.value as Map;
                   players['key'] = snapshot.key;
-                  return listItem(thisPlayer: players);
+                  return listItemPlayersForTeamA(thisPlayer: players);
                 },
               ),
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        child: Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.zero)),
+                  backgroundColor: const Color.fromRGBO(117, 90, 41, 1.0),
+                ),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminSelectTournamentPage(),
+                      ),
+                      (route) => false);
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white, fontSize: 15.w),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  // backgroundColor: const Color.fromRGBO(23, 64, 124, 1.0),
+                  backgroundColor: const Color.fromRGBO(107, 75, 3, 1.0),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.zero)),
+                ),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AdminAddPlayersToTeamB(
+                            tId: widget.tId!,
+                            tName: widget.tName!,
+                            mId: widget.mId),
+                        //builder: (context) =>  Admin(uuid: widget.tId!, tournamentName: widget.tName!),
+                      ),
+                      (route) => false);
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
+                  child: Text(
+                    "Save",
+                    style: TextStyle(color: Colors.white, fontSize: 15.w),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AdminAddPlayersToTeamB extends StatefulWidget {
+  final String? tId;
+  final String? mId;
+  final String? tName;
+
+  const AdminAddPlayersToTeamB(
+      {super.key, required this.tId, required this.mId, required this.tName});
+
+  @override
+  State<AdminAddPlayersToTeamB> createState() => _AdminAddPlayersToTeamB();
+}
+
+class _AdminAddPlayersToTeamB extends State<AdminAddPlayersToTeamB> {
+  late DatabaseReference dbRef1;
+  late DatabaseReference dbRef2;
+  Query dbQuery = FirebaseDatabase.instance.ref().child('Players');
+  bool isAddedTeam2 = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Widget listItemPlayersForTeamB({required Map thisPlayer}) {
+    String? id = thisPlayer['id'];
+    String? teamsAddedA = thisPlayer['isAddedToTeamA'];
+    String? teamsAdded = thisPlayer['isAddedToTeamB'];
+    return Padding(
+      padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
+      child: Container(
+        decoration: BoxDecoration(color: Color.fromRGBO(229, 227, 221, 1.0)),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      elevation: (0),
+                      padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
+                      backgroundColor: Color.fromRGBO(201, 169, 101, 1.0)),
+                  onPressed: () {},
+                  child: Container(
+                      child: Padding(
+                    padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
+                    child: Text(
+                      thisPlayer['name'],
+                      style: TextStyle(fontSize: 15.w, color: Colors.black),
+                    ),
+                  ))),
+            ),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    elevation: (0),
+                    padding: (EdgeInsets.only(top: 10.w, bottom: 10.w)),
+                    backgroundColor: Color.fromRGBO(229, 227, 221, 1.0)),
+                onPressed: () {
+                  if (teamsAddedA != 'true' || teamsAdded == 'true') {
+                    setState(() {
+                      dbRef1 = FirebaseDatabase.instance
+                          .ref()
+                          .child('Tournaments')
+                          .child(widget.tId!)
+                          .child('Matches')
+                          .child(widget.mId!);
+                      dbRef2 = FirebaseDatabase.instance
+                          .ref()
+                          .child('Players')
+                          .child(id!);
+                      isAddedTeam2 = (teamsAdded != "true") ? false : true;
+                      isAddedTeam2 = !isAddedTeam2;
+                    });
+                    Map<String, String> updatetThisTeam = {
+                      'isAddedToTeamB': isAddedTeam2.toString()
+                    };
+                    dbRef2.update(updatetThisTeam);
+
+                    Map<String, String> thisTeamToMatch = {
+                      'name': thisPlayer['name']!,
+                      'id': thisPlayer['id']!,
+                    };
+
+                    isAddedTeam2
+                        ? dbRef1
+                            .child('Team-B')
+                            .child('Players')
+                            .child(thisPlayer['id'])
+                            .set(thisTeamToMatch)
+                        : null;
+                    !isAddedTeam2
+                        ? dbRef1
+                            .child('Team-B')
+                            .child('Players')
+                            .child(thisPlayer['id'])
+                            .remove()
+                        : null;
+                  } else {
+                    Fluttertoast.showToast(
+                        msg: "Already added to team A",
+                        toastLength: Toast.LENGTH_SHORT);
+                  }
+                },
+                child: _buildChild(thisPlayer: thisPlayer),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChild({required Map thisPlayer}) {
+    if (thisPlayer['isAddedToTeamA'] == 'true') {
+      return Text("Added",style: TextStyle(fontSize: 15.w, color: Colors.black),);
+    } else if (thisPlayer['isAddedToTeamB'] == 'true') {
+      return Text("Remove",style: TextStyle(fontSize: 15.w, color: Colors.black),);
+    } else {
+      return Text("Add",style: TextStyle(fontSize: 15.w, color: Colors.black),);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Configure match", style: TextStyle(fontSize: 20.sp)),
+        backgroundColor: const Color.fromRGBO(197, 139, 48, 1.0),
+        toolbarHeight: 45.w,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: EdgeInsets.only(top: 20.w, left: 30.w),
+              child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Text("Team B",
+                      style: TextStyle(
+                          fontSize: 15.w,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold))),
+            ),
+          ),
+          Expanded(
+            flex: 13,
+            child: Padding(
+              padding: EdgeInsets.only(top: 10.w, bottom: 25.w),
+              child: FirebaseAnimatedList(
+                query: dbQuery,
+                itemBuilder: (BuildContext context, DataSnapshot snapshot,
+                    Animation<double> animation, int index) {
+                  Map players = snapshot.value as Map;
+                  players['key'] = snapshot.key;
+                  return listItemPlayersForTeamB(thisPlayer: players);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Container(
+        child: Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.zero)),
+                  backgroundColor: const Color.fromRGBO(117, 90, 41, 1.0),
+                ),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminSelectTournamentPage(),
+                      ),
+                      (route) => false);
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white, fontSize: 15.w),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  // backgroundColor: const Color.fromRGBO(23, 64, 124, 1.0),
+                  backgroundColor: const Color.fromRGBO(107, 75, 3, 1.0),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.zero)),
+                ),
+                onPressed: () {
+
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>  AdminMatchesConfigurePage(uuid: widget.tId!, tournamentName: widget.tName!),
+                      ),
+                          (route) => false);
+
+
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
+                  child: Text(
+                    "Save",
+                    style: TextStyle(color: Colors.white, fontSize: 15.w),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
