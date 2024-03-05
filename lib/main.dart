@@ -537,7 +537,14 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                             tName: widget.tournamentName,
                           )),
                   (route) => false)
-              : Null;
+              : Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => AdminTossSelect(
+                            tId: widget.uuid,
+                            mId: thisMatch['id'],
+                          )),
+                  (route) => false);
         },
         child: Text(
             (thisMatch['definedOrNot'] != 'true')
@@ -711,7 +718,7 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                       dbRef2.update(updatetThisTeam);
 
                       Map<String, String> thisTeamToMatch = {
-                        'name': thisTeam['name']!,
+                        'team name': thisTeam['name']!,
                         'id': thisTeam['id']!,
                       };
                       Map<String, String> updateAddingofTeam = {
@@ -800,7 +807,7 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                         dbRef2.update(updatetThisTeam);
 
                         Map<String, String> thisTeamToMatch = {
-                          'name': thisTeam['name']!,
+                          'team name': thisTeam['name']!,
                           'id': thisTeam['id']!,
                         };
                         Map<String, String> updateAddingofTeam = {
@@ -955,7 +962,7 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                         builder: (context) => AdminAddPlayersToTeamA(
                             tId: widget.tId!,
                             tName: widget.tName!,
-                            mId: widget.mId),
+                            mId: widget.mId,),
                         //builder: (context) =>  AdminMatchesConfigurePage(uuid: widget.tId!, tournamentName: widget.tName!),
                       ),
                       (route) => false);
@@ -1178,8 +1185,7 @@ class _AdminAddTeams extends State<AdminAddTeams> {
                   Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              AdminSelectTournamentPage()),
+                          builder: (context) => AdminSelectTournamentPage()),
                       (route) => false);
                 },
                 child: Padding(
@@ -1747,11 +1753,20 @@ class _AdminAddPlayersToTeamB extends State<AdminAddPlayersToTeamB> {
 
   Widget _buildChild({required Map thisPlayer}) {
     if (thisPlayer['isAddedToTeamA'] == 'true') {
-      return Text("Added",style: TextStyle(fontSize: 15.w, color: Colors.black),);
+      return Text(
+        "Added",
+        style: TextStyle(fontSize: 15.w, color: Colors.black),
+      );
     } else if (thisPlayer['isAddedToTeamB'] == 'true') {
-      return Text("Remove",style: TextStyle(fontSize: 15.w, color: Colors.black),);
+      return Text(
+        "Remove",
+        style: TextStyle(fontSize: 15.w, color: Colors.black),
+      );
     } else {
-      return Text("Add",style: TextStyle(fontSize: 15.w, color: Colors.black),);
+      return Text(
+        "Add",
+        style: TextStyle(fontSize: 15.w, color: Colors.black),
+      );
     }
   }
 
@@ -1835,20 +1850,261 @@ class _AdminAddPlayersToTeamB extends State<AdminAddPlayersToTeamB> {
                       borderRadius: BorderRadius.all(Radius.zero)),
                 ),
                 onPressed: () {
-
                   Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>  AdminMatchesConfigurePage(uuid: widget.tId!, tournamentName: widget.tName!),
+                        builder: (context) => AdminMatchesConfigurePage(
+                            uuid: widget.tId!, tournamentName: widget.tName!),
                       ),
-                          (route) => false);
-
-
+                      (route) => false);
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
                   child: Text(
                     "Save",
+                    style: TextStyle(color: Colors.white, fontSize: 15.w),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AdminTossSelect extends StatefulWidget {
+  final String? tId;
+  final String? mId;
+
+  AdminTossSelect({super.key, required this.tId, required this.mId});
+
+  @override
+  State<StatefulWidget> createState() => _AdminTossSelect();
+}
+
+class _AdminTossSelect extends State<AdminTossSelect> {
+  late Future<String>  team_A_Name;
+  late Future<String>  team_B_Name;
+
+  @override
+  void initState() {
+    super.initState();
+    team_A_Name=getTeamName('Team-A');
+    team_B_Name=getTeamName('Team-B');
+  }
+
+  Future<String> getTeamName(String team) async {
+    //DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("Tournaments/${widget.tId}/Matches/${widget.mId}/$team/team name");
+    DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("Tournaments/${widget.tId}/Matches/${widget.mId}/$team/id");
+    DatabaseEvent event = await dbRef.once();
+    DataSnapshot snapshot = event.snapshot;
+    if (snapshot.value != null) {
+      DatabaseReference dbRef2 = FirebaseDatabase.instance.ref().child("Teams/${snapshot.value}/short");
+      DatabaseEvent event2 = await dbRef2.once();
+      DataSnapshot snapshot2 = event2.snapshot;
+      if(snapshot2.value != null){
+        return snapshot2.value.toString();
+      }else{
+        return "";
+      }
+    } else {
+      return "";
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Match Toss", style: TextStyle(fontSize: 20.sp)),
+        backgroundColor: const Color.fromRGBO(197, 139, 48, 1.0),
+        toolbarHeight: 45.w,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            flex: 5,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              child: Image.asset(
+                "assets/add_tournament.jpg",
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: Padding(
+              padding: EdgeInsets.only(top: 20.w),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(bottom:10.w),
+                    child: Text(
+                      "Which team won the toss ?",
+                      style: TextStyle(color: Colors.black, fontSize: 20.w),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(right:5.w),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          fixedSize: Size.fromWidth(100.h)
+                      ),
+                      onPressed: () {},
+                      child: FutureBuilder<String>(
+                        future: team_A_Name,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            return Padding(
+                              padding:  EdgeInsets.only(top:15.w,bottom:15.w),
+                              child: Text(snapshot.data ?? '',
+                                  style: TextStyle(color: Colors.white, fontSize: 15.w)),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 15.w),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        fixedSize: Size.fromWidth(100.h)
+                      ),
+                      onPressed: () {},
+                      child: FutureBuilder<String>(
+                        future: team_B_Name,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            return Padding(
+                              padding: EdgeInsets.only(top:15.w,bottom:15.w),
+                              child: Text(snapshot.data ?? '',
+                                  style: TextStyle(color: Colors.white, fontSize: 15.w)),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),Expanded(
+            flex: 8,
+            child: Padding(
+              padding: EdgeInsets.only(top: 20.w),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding:  EdgeInsets.only(bottom:10.w),
+                    child: Text(
+                      "What they choose ?",
+                      style: TextStyle(color: Colors.black, fontSize: 20.w),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom:15.w),
+                    child: ElevatedButton(
+                        onPressed: () {},
+                        child: Padding(
+                          padding: EdgeInsets.only(top:10.w,bottom:10.w,right:10.w,left:10.w),
+                          child: Text("Batting",
+                              style:
+                              TextStyle(color: Colors.white, fontSize: 20.w)),
+                        )),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom:10.w),
+                    child: ElevatedButton(
+                        onPressed: () {},
+                        child: Padding(
+                          padding: EdgeInsets.only(top:10.w,bottom:10.w,right:10.w,left:10.w),
+                          child: Text("Bowling",
+                              style:
+                              TextStyle(color: Colors.white, fontSize: 20.w)),
+                        )),
+                  )
+                ],
+              ),
+            ),
+          )
+        ],
+      ),
+      bottomNavigationBar: Container(
+        child: Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.zero)),
+                  backgroundColor: const Color.fromRGBO(117, 90, 41, 1.0),
+                ),
+                onPressed: () {
+                  /*
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminSelectTournamentPage(),
+                      ),
+                          (route) => false);
+
+                   */
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white, fontSize: 15.w),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  // backgroundColor: const Color.fromRGBO(23, 64, 124, 1.0),
+                  backgroundColor: const Color.fromRGBO(107, 75, 3, 1.0),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.zero)),
+                ),
+                onPressed: () {
+                  /*
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AdminMatchesConfigurePage(
+                            uuid: widget.tId!, tournamentName: widget.tName!),
+                      ),
+                          (route) => false);
+
+                   */
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
+                  child: Text(
+                    "Start Match",
                     style: TextStyle(color: Colors.white, fontSize: 15.w),
                   ),
                 ),
