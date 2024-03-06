@@ -37,7 +37,8 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(builder: (_, child) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: AdminSelectTournamentPage(),
+        // home: AdminSelectTournamentPage(),
+        home: AdminScoreChangePage(),
       );
     });
   }
@@ -960,9 +961,10 @@ class _AdminAddTeamToMatches extends State<AdminAddTeamToMatches> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => AdminAddPlayersToTeamA(
-                            tId: widget.tId!,
-                            tName: widget.tName!,
-                            mId: widget.mId,),
+                          tId: widget.tId!,
+                          tName: widget.tName!,
+                          mId: widget.mId,
+                        ),
                         //builder: (context) =>  AdminMatchesConfigurePage(uuid: widget.tId!, tournamentName: widget.tName!),
                       ),
                       (route) => false);
@@ -1878,35 +1880,39 @@ class AdminTossSelect extends StatefulWidget {
   final String? tId;
   final String? mId;
 
-  AdminTossSelect({super.key, required this.tId, required this.mId});
+  const AdminTossSelect({super.key, required this.tId, required this.mId});
 
   @override
   State<StatefulWidget> createState() => _AdminTossSelect();
 }
 
 class _AdminTossSelect extends State<AdminTossSelect> {
-  late Future<String>  team_A_Name;
-  late Future<String>  team_B_Name;
+  late Future<String> team_A_Name;
+  late Future<String> team_B_Name;
 
   @override
   void initState() {
     super.initState();
-    team_A_Name=getTeamName('Team-A');
-    team_B_Name=getTeamName('Team-B');
+    team_A_Name = getTeamName('Team-A');
+    team_B_Name = getTeamName('Team-B');
   }
 
   Future<String> getTeamName(String team) async {
     //DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("Tournaments/${widget.tId}/Matches/${widget.mId}/$team/team name");
-    DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("Tournaments/${widget.tId}/Matches/${widget.mId}/$team/id");
+    DatabaseReference dbRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/$team/id");
     DatabaseEvent event = await dbRef.once();
     DataSnapshot snapshot = event.snapshot;
     if (snapshot.value != null) {
-      DatabaseReference dbRef2 = FirebaseDatabase.instance.ref().child("Teams/${snapshot.value}/short");
+      DatabaseReference dbRef2 = FirebaseDatabase.instance
+          .ref()
+          .child("Teams/${snapshot.value}/short");
       DatabaseEvent event2 = await dbRef2.once();
       DataSnapshot snapshot2 = event2.snapshot;
-      if(snapshot2.value != null){
+      if (snapshot2.value != null) {
         return snapshot2.value.toString();
-      }else{
+      } else {
         return "";
       }
     } else {
@@ -1943,32 +1949,32 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(bottom:10.w),
+                    padding: EdgeInsets.only(bottom: 10.w),
                     child: Text(
                       "Which team won the toss ?",
                       style: TextStyle(color: Colors.black, fontSize: 20.w),
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.only(right:5.w),
+                    padding: EdgeInsets.only(right: 5.w),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          fixedSize: Size.fromWidth(100.h)
-                      ),
+                          elevation: 0, fixedSize: Size.fromWidth(100.h)),
                       onPressed: () {},
                       child: FutureBuilder<String>(
                         future: team_A_Name,
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return CircularProgressIndicator();
                           } else if (snapshot.hasError) {
                             return Text('Error: ${snapshot.error}');
                           } else {
                             return Padding(
-                              padding:  EdgeInsets.only(top:15.w,bottom:15.w),
+                              padding: EdgeInsets.only(top: 15.w, bottom: 15.w),
                               child: Text(snapshot.data ?? '',
-                                  style: TextStyle(color: Colors.white, fontSize: 15.w)),
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 15.w)),
                             );
                           }
                         },
@@ -1979,22 +1985,22 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                     padding: EdgeInsets.only(top: 15.w),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                        fixedSize: Size.fromWidth(100.h)
-                      ),
+                          elevation: 0, fixedSize: Size.fromWidth(100.h)),
                       onPressed: () {},
                       child: FutureBuilder<String>(
                         future: team_B_Name,
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return CircularProgressIndicator();
                           } else if (snapshot.hasError) {
                             return Text('Error: ${snapshot.error}');
                           } else {
                             return Padding(
-                              padding: EdgeInsets.only(top:15.w,bottom:15.w),
+                              padding: EdgeInsets.only(top: 15.w, bottom: 15.w),
                               child: Text(snapshot.data ?? '',
-                                  style: TextStyle(color: Colors.white, fontSize: 15.w)),
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 15.w)),
                             );
                           }
                         },
@@ -2004,7 +2010,8 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                 ],
               ),
             ),
-          ),Expanded(
+          ),
+          Expanded(
             flex: 8,
             child: Padding(
               padding: EdgeInsets.only(top: 20.w),
@@ -2013,32 +2020,34 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Padding(
-                    padding:  EdgeInsets.only(bottom:10.w),
+                    padding: EdgeInsets.only(bottom: 10.w),
                     child: Text(
                       "What they choose ?",
                       style: TextStyle(color: Colors.black, fontSize: 20.w),
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.only(bottom:15.w),
+                    padding: EdgeInsets.only(bottom: 15.w),
                     child: ElevatedButton(
                         onPressed: () {},
                         child: Padding(
-                          padding: EdgeInsets.only(top:10.w,bottom:10.w,right:10.w,left:10.w),
+                          padding: EdgeInsets.only(
+                              top: 10.w, bottom: 10.w, right: 10.w, left: 10.w),
                           child: Text("Batting",
-                              style:
-                              TextStyle(color: Colors.white, fontSize: 20.w)),
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 20.w)),
                         )),
                   ),
                   Padding(
-                    padding: EdgeInsets.only(bottom:10.w),
+                    padding: EdgeInsets.only(bottom: 10.w),
                     child: ElevatedButton(
                         onPressed: () {},
                         child: Padding(
-                          padding: EdgeInsets.only(top:10.w,bottom:10.w,right:10.w,left:10.w),
+                          padding: EdgeInsets.only(
+                              top: 10.w, bottom: 10.w, right: 10.w, left: 10.w),
                           child: Text("Bowling",
-                              style:
-                              TextStyle(color: Colors.white, fontSize: 20.w)),
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 20.w)),
                         )),
                   )
                 ],
@@ -2112,6 +2121,417 @@ class _AdminTossSelect extends State<AdminTossSelect> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class AdminScoreChangePage extends StatefulWidget {
+  const AdminScoreChangePage({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _AdminScoreChange();
+}
+
+class _AdminScoreChange extends State<AdminScoreChangePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.green,
+      appBar: AppBar(
+        title: Text("Scoring", style: TextStyle(fontSize: 20.sp)),
+        backgroundColor: const Color.fromRGBO(197, 139, 48, 1.0),
+        toolbarHeight: 45.w,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Container(
+              color: Colors.amber,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '100/',
+                        style: TextStyle(fontSize: 25.w),
+                      ),
+                      Text(
+                        '5',
+                        style: TextStyle(fontSize: 25.w),
+                      ),
+                      Text(
+                        '  (1.4/10)',
+                        style: TextStyle(fontSize: 15.w),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: 10.w,
+                    ),
+                    child: Text(
+                      "CSK is Bowling now",
+                      style: TextStyle(fontSize: 15.w),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+          Expanded(flex: 2, child: Container(
+            child: Column(
+              children: [
+                Expanded(flex:1,child: Padding(
+                  padding:  EdgeInsets.only(left:40.w),
+                  child: Align(alignment: Alignment.centerLeft,child: Text("Rohit sharma (now) : 30 (40) ",style: TextStyle(
+                    fontSize: 15.w
+                  ),)),
+                )),
+                Expanded(flex:1,child: Padding(
+                  padding: EdgeInsets.only(left:40.w),
+                  child: Align(alignment: Alignment.centerLeft,child: Text("Virat kholi (now) : 30 (40) ",style: TextStyle(
+                      fontSize: 15.w
+                  ))),
+                ))
+              ],
+            ),
+          )),
+          Expanded(flex: 2, child: Container(color:Colors.amber,child:Padding(
+            padding:  EdgeInsets.only(left:40.w),
+            child: Align(alignment: Alignment.centerLeft,child: Text("Harbajan singh : 30/4 (3.5) ",style: TextStyle(
+                fontSize: 15.w
+            ),)),
+          ))),
+          Expanded(flex: 2, child: Container(color: Colors.deepOrange)),
+          Expanded(
+            flex: 6,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              color: Colors.indigoAccent,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                              child: InkWell(
+                                onTap: () {},
+                                splashColor: Colors.black87,
+                                child: Container(
+                                  //width: MediaQuery.of(context).size.width,
+                                  height: MediaQuery.of(context).size.height,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                      color: Colors.white54,
+                                      shape: BoxShape.rectangle,
+                                      border: Border.all(color: Colors.black)),
+                                  child: Center(
+                                    child: Text(
+                                      "0",
+                                      style: TextStyle(fontSize: 25.w),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                              child: InkWell(
+                                  onTap: () {},
+                                  splashColor: Colors.black87,
+                                  child: Container(
+                                    //width: MediaQuery.of(context).size.width,
+                                      height: MediaQuery.of(context).size.height,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                          color: Colors.white54,
+                                          shape: BoxShape.rectangle,
+                                          border:
+                                              Border.all(color: Colors.black)),
+                                      child: Center(
+                                          child: Text("1",
+                                              style:
+                                                  TextStyle(fontSize: 25.w))))),
+                            )),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("2",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("3",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("4",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("5",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("6",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("7",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("WD",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("NB",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("BYE",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("LB",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("Cancel",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("OUT",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                        Expanded(
+                            flex: 1,
+                            child: Material(
+                                child: InkWell(
+                                    onTap: () {},
+                                    splashColor: Colors.black87,
+                                    child: Container(
+                                      //width: MediaQuery.of(context).size.width,
+                                        height: MediaQuery.of(context).size.height,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white54,
+                                        shape: BoxShape.rectangle,
+                                        border:
+                                            Border.all(color: Colors.black)),
+                                    child: Center(
+                                        child: Text("UNDO",
+                                            style:
+                                                TextStyle(fontSize: 25.w))))))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
