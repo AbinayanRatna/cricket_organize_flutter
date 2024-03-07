@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
         // home: AdminSelectTournamentPage(),
-        home: AdminScoreChangePage(),
+        home: AdminSelectTournamentPage(),
       );
     });
   }
@@ -505,6 +505,7 @@ class AdminMatchesConfigurePage extends StatefulWidget {
 }
 
 class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
+  late String Status;
   late Query dbQuery;
   DatabaseReference referenceTournament =
       FirebaseDatabase.instance.ref().child('Tournaments');
@@ -516,17 +517,71 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
     super.initState();
     dbQuery = FirebaseDatabase.instance
         .ref()
-        .child('Tournaments/${widget.uuid}/Matches');
+        .child('Tournaments/${widget.uuid}/Matches').orderByChild("Status");
+
+  }
+
+
+  Future<String> textStatus({required String mId}) async {
+    DatabaseReference dbRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.uuid}/Matches/$mId/Status");
+    String teamAName='Team-A';
+    String teamBName='Team-B';
+    DatabaseReference dbRef2 = FirebaseDatabase.instance.ref().child("Tournaments/${widget.uuid}/Matches/$mId/Team-A/team name");
+    DatabaseReference dbRef3 = FirebaseDatabase.instance.ref().child("Tournaments/${widget.uuid}/Matches/$mId/Team-B/team name");
+    DatabaseEvent event2 = await dbRef2.once();
+    DatabaseEvent event3 = await dbRef3.once();
+    DataSnapshot snapshot2 = event2.snapshot;
+    DataSnapshot snapshot3 = event3.snapshot;
+    if ((snapshot2.value != null) && (snapshot3.value != null)) {
+      teamAName=snapshot2.value.toString();
+      teamBName=snapshot3.value.toString();
+    }
+
+    DatabaseEvent event = await dbRef.once();
+    DataSnapshot snapshot = event.snapshot;
+    if (snapshot.value != null) {
+      print("newnew : "+snapshot.value.toString());
+      switch(snapshot.value.toString()){
+        case 'Tossed':{
+          return ('$teamAName vs $teamBName - Start');
+        }
+        case 'Initialized':{
+          return ('Match -Configure');
+        }
+        case 'Players-initialized':{
+          return ('$teamAName vs $teamBName -Toss select');
+        }
+        case 'Started':{
+          return ('$teamAName vs $teamBName -Pause');
+        }
+        case 'Finished':{
+          return ('$teamAName vs $teamBName -Finished');
+        }
+        case 'Paused':{
+          return ('$teamAName vs $teamBName -Resume');
+        }
+        default:{
+          return ('Match -Configure');
+        }
+      }
+
+    } else {
+        return ("Match -Configure");
+      }
+
   }
 
   Widget listItem({required Map thisMatch}) {
+     Future<String> matchStatus=textStatus(mId: thisMatch['id']) ;
     return Padding(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
       child: ElevatedButton(
-        style: ButtonStyle(
-            elevation: MaterialStatePropertyAll(0),
-            padding: MaterialStatePropertyAll(
-                EdgeInsets.only(top: 20.w, bottom: 20.w))),
+        style: ElevatedButton.styleFrom(
+          fixedSize: Size.fromWidth(MediaQuery.of(context).size.width),
+            elevation: (0),
+            padding:(EdgeInsets.only(top: 20.w, bottom: 20.w))),
         onPressed: () {
           (thisMatch['definedOrNot'] != "true")
               ? Navigator.pushAndRemoveUntil(
@@ -542,16 +597,30 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                   context,
                   MaterialPageRoute(
                       builder: (context) => AdminTossSelect(
+                        tName: widget.tournamentName,
                             tId: widget.uuid,
                             mId: thisMatch['id'],
                           )),
                   (route) => false);
         },
-        child: Text(
-            (thisMatch['definedOrNot'] != 'true')
-                ? "Match - Not configured"
-                : "Configured",
-            style: TextStyle(fontSize: 15)),
+        child: FutureBuilder<String>(
+          future: matchStatus,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState ==
+                ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              return Padding(
+                padding: EdgeInsets.only(top: 5.w, bottom: 5.w),
+                child: Text(snapshot.data ?? '',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: 12.w)),
+              );
+            }
+          },
+        ),
       ),
     );
   }
@@ -586,6 +655,7 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                           "definedOrNot": "Not",
                           "TeamA-defined": "Not",
                           "TeamB-defined": "Not",
+                          "Status":"Initialized"
                         };
 
                         referenceMatches.set(matches);
@@ -606,7 +676,7 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                       Animation<double> animation, int index) {
                     Map matches = snapshot.value as Map;
                     matches['key'] = snapshot.key;
-                    return listItem(thisMatch: matches);
+                    return Column(children: [listItem(thisMatch: matches)]);
                   },
                 ),
               ),
@@ -1852,6 +1922,11 @@ class _AdminAddPlayersToTeamB extends State<AdminAddPlayersToTeamB> {
                       borderRadius: BorderRadius.all(Radius.zero)),
                 ),
                 onPressed: () {
+                  Map<String,String> playersInitialized={
+                    "Status":"Players-initialized",
+                  };
+                  dbRef1=FirebaseDatabase.instance.ref().child('Tournaments/${widget.tId}/Matches/${widget.mId}');
+                  dbRef1.update(playersInitialized);
                   Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
@@ -1879,8 +1954,8 @@ class _AdminAddPlayersToTeamB extends State<AdminAddPlayersToTeamB> {
 class AdminTossSelect extends StatefulWidget {
   final String? tId;
   final String? mId;
-
-  const AdminTossSelect({super.key, required this.tId, required this.mId});
+  final String? tName;
+  const AdminTossSelect({super.key, required this.tId, required this.mId,required this.tName});
 
   @override
   State<StatefulWidget> createState() => _AdminTossSelect();
@@ -1889,6 +1964,11 @@ class AdminTossSelect extends StatefulWidget {
 class _AdminTossSelect extends State<AdminTossSelect> {
   late Future<String> team_A_Name;
   late Future<String> team_B_Name;
+  bool isTeamATossWin = false;
+  bool isTeamBTossWin = false;
+  bool isBattingSelected = false;
+  bool isBowlingSelected = false;
+  late DatabaseReference dbRef1;
 
   @override
   void initState() {
@@ -1959,8 +2039,18 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                     padding: EdgeInsets.only(right: 5.w),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          elevation: 0, fixedSize: Size.fromWidth(100.h)),
-                      onPressed: () {},
+                        elevation: 0,
+                        fixedSize: Size.fromWidth(100.h),
+                        backgroundColor: (isTeamATossWin && !isTeamBTossWin)
+                            ? const Color.fromRGBO(197, 139, 48, 1.0)
+                            : const Color.fromRGBO(30, 75, 199, 1.0),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isTeamATossWin = true;
+                          isTeamBTossWin = false;
+                        });
+                      },
                       child: FutureBuilder<String>(
                         future: team_A_Name,
                         builder: (context, snapshot) {
@@ -1985,8 +2075,18 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                     padding: EdgeInsets.only(top: 15.w),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          elevation: 0, fixedSize: Size.fromWidth(100.h)),
-                      onPressed: () {},
+                        elevation: 0,
+                        fixedSize: Size.fromWidth(100.h),
+                        backgroundColor: (!isTeamATossWin && isTeamBTossWin)
+                            ? const Color.fromRGBO(197, 139, 48, 1.0)
+                            : const Color.fromRGBO(30, 75, 199, 1.0),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isTeamATossWin = false;
+                          isTeamBTossWin = true;
+                        });
+                      },
                       child: FutureBuilder<String>(
                         future: team_B_Name,
                         builder: (context, snapshot) {
@@ -2029,7 +2129,19 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                   Padding(
                     padding: EdgeInsets.only(bottom: 15.w),
                     child: ElevatedButton(
-                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor:
+                              (!isBowlingSelected && isBattingSelected)
+                                  ? const Color.fromRGBO(197, 139, 48, 1.0)
+                                  : const Color.fromRGBO(30, 75, 199, 1.0),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isBattingSelected = true;
+                            isBowlingSelected = false;
+                          });
+                        },
                         child: Padding(
                           padding: EdgeInsets.only(
                               top: 10.w, bottom: 10.w, right: 10.w, left: 10.w),
@@ -2041,7 +2153,19 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                   Padding(
                     padding: EdgeInsets.only(bottom: 10.w),
                     child: ElevatedButton(
-                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor:
+                              (isBowlingSelected && !isBattingSelected)
+                                  ? const Color.fromRGBO(197, 139, 48, 1.0)
+                                  : const Color.fromRGBO(30, 75, 199, 1.0),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isBattingSelected = false;
+                            isBowlingSelected = true;
+                          });
+                        },
                         child: Padding(
                           padding: EdgeInsets.only(
                               top: 10.w, bottom: 10.w, right: 10.w, left: 10.w),
@@ -2099,7 +2223,81 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                       borderRadius: BorderRadius.all(Radius.zero)),
                 ),
                 onPressed: () {
-                  /*
+                  Map<String, String> tossWinTeam= {
+                    "Toss_win": "Not selected",
+                  };
+                  Map<String, String> tossWinSelected={
+                    "First_innings": "Not selected",
+                };
+                  Map<String, String> tossLossSelected={
+                    "First_innings": "Not selected",
+                  };
+                  String winTeamName='No defined';
+                  String lossTeamName='No defined';
+                  setState(() {
+                    dbRef1= FirebaseDatabase.instance.ref().child("Tournaments/${widget.tId}/Matches/${widget.mId}");
+                    if ((!isTeamBTossWin && !isTeamATossWin) ||
+                        (!isBattingSelected && !isBowlingSelected)) {
+                      null;
+                    } else if (!isTeamBTossWin && isTeamATossWin) {
+                      winTeamName='Team-A';
+                      lossTeamName='Team-B';
+                      if (isBattingSelected) {
+                        tossWinTeam = {
+                          "Toss_win": "Team-A",
+                          "Status":"Tossed"
+                        };
+                        tossWinSelected = {
+                          "First_innings": "Batting",
+                        };
+                        tossLossSelected = {
+                          "First_innings": "Bowling",
+                        };
+                      } else if(isBowlingSelected){
+                        tossWinTeam = {
+                          "Toss_win": "Team-A",
+                          "Status":"Tossed"
+                        };
+                        tossWinSelected = {
+                          "First_innings": "Bowling",
+                        };
+                        tossLossSelected = {
+                          "First_innings": "Batting",
+                        };
+                      }
+                    }else{
+                      lossTeamName='Team-A';
+                      winTeamName='Team-B';
+                      if (isBattingSelected) {
+                        tossWinTeam = {
+                          "Toss_win": "Team-B",
+                          "Status":"Tossed"
+                        };
+                        tossWinSelected = {
+                          "First_innings": "Batting",
+                        };
+                        tossLossSelected = {
+                          "First_innings": "Bowling",
+                        };
+                      } else if(isBowlingSelected){
+                        tossWinTeam = {
+                          "Toss_win": "Team-B",
+                          "Status":"Tossed"
+                        };
+                        tossWinSelected = {
+                          "First_innings": "Bowling",
+                        };
+                        tossLossSelected = {
+                          "First_innings": "Batting",
+                        };
+                      }
+                    }
+                    dbRef1.update(tossWinTeam);
+                    dbRef1.child(winTeamName).update(tossWinSelected);
+                   dbRef1.child(lossTeamName).update(tossLossSelected);
+                  });
+
+
                   Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
@@ -2108,7 +2306,7 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                       ),
                           (route) => false);
 
-                   */
+
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -2183,30 +2381,47 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
               ),
             ),
           ),
-          Expanded(flex: 2, child: Container(
-            child: Column(
-              children: [
-                Expanded(flex:1,child: Padding(
-                  padding:  EdgeInsets.only(left:40.w),
-                  child: Align(alignment: Alignment.centerLeft,child: Text("Rohit sharma (now) : 30 (40) ",style: TextStyle(
-                    fontSize: 15.w
-                  ),)),
-                )),
-                Expanded(flex:1,child: Padding(
-                  padding: EdgeInsets.only(left:40.w),
-                  child: Align(alignment: Alignment.centerLeft,child: Text("Virat kholi (now) : 30 (40) ",style: TextStyle(
-                      fontSize: 15.w
+          Expanded(
+              flex: 2,
+              child: Container(
+                child: Column(
+                  children: [
+                    Expanded(
+                        flex: 1,
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 40.w),
+                          child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                "Rohit sharma (now) : 30 (40) ",
+                                style: TextStyle(fontSize: 15.w),
+                              )),
+                        )),
+                    Expanded(
+                        flex: 1,
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 40.w),
+                          child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text("Virat kholi (now) : 30 (40) ",
+                                  style: TextStyle(fontSize: 15.w))),
+                        ))
+                  ],
+                ),
+              )),
+          Expanded(
+              flex: 2,
+              child: Container(
+                  color: Colors.amber,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 40.w),
+                    child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Harbajan singh : 30/4 (3.5) ",
+                          style: TextStyle(fontSize: 15.w),
+                        )),
                   ))),
-                ))
-              ],
-            ),
-          )),
-          Expanded(flex: 2, child: Container(color:Colors.amber,child:Padding(
-            padding:  EdgeInsets.only(left:40.w),
-            child: Align(alignment: Alignment.centerLeft,child: Text("Harbajan singh : 30/4 (3.5) ",style: TextStyle(
-                fontSize: 15.w
-            ),)),
-          ))),
           Expanded(flex: 2, child: Container(color: Colors.deepOrange)),
           Expanded(
             flex: 6,
@@ -2251,8 +2466,9 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                   onTap: () {},
                                   splashColor: Colors.black87,
                                   child: Container(
-                                    //width: MediaQuery.of(context).size.width,
-                                      height: MediaQuery.of(context).size.height,
+                                      //width: MediaQuery.of(context).size.width,
+                                      height:
+                                          MediaQuery.of(context).size.height,
                                       alignment: Alignment.center,
                                       decoration: BoxDecoration(
                                           color: Colors.white54,
@@ -2271,18 +2487,19 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("2",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("2",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2290,18 +2507,19 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("3",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("3",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                       ],
                     ),
                   ),
@@ -2317,17 +2535,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("4",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("4",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2335,17 +2554,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("5",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("5",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2353,17 +2573,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("6",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("6",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2371,17 +2592,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("7",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("7",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                       ],
                     ),
                   ),
@@ -2397,17 +2619,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("WD",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("WD",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2415,17 +2638,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("NB",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("NB",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2433,17 +2657,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("BYE",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("BYE",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2451,17 +2676,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("LB",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("LB",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                       ],
                     ),
                   ),
@@ -2477,17 +2703,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("Cancel",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("Cancel",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2495,17 +2722,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("OUT",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("OUT",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                         Expanded(
                             flex: 1,
                             child: Material(
@@ -2513,17 +2741,18 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                     onTap: () {},
                                     splashColor: Colors.black87,
                                     child: Container(
-                                      //width: MediaQuery.of(context).size.width,
-                                        height: MediaQuery.of(context).size.height,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white54,
-                                        shape: BoxShape.rectangle,
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Center(
-                                        child: Text("UNDO",
-                                            style:
-                                                TextStyle(fontSize: 25.w))))))),
+                                        //width: MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white54,
+                                            shape: BoxShape.rectangle,
+                                            border: Border.all(
+                                                color: Colors.black)),
+                                        child: Center(
+                                            child: Text("UNDO",
+                                                style: TextStyle(
+                                                    fontSize: 25.w))))))),
                       ],
                     ),
                   ),
