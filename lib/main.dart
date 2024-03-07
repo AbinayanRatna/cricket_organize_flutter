@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -575,6 +576,7 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
 
   Widget listItem({required Map thisMatch}) {
      Future<String> matchStatus=textStatus(mId: thisMatch['id']) ;
+     String matchStatusRetireve=thisMatch['Status'];
     return Padding(
       padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.w),
       child: ElevatedButton(
@@ -602,6 +604,34 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                             mId: thisMatch['id'],
                           )),
                   (route) => false);
+
+          if(matchStatusRetireve=='Initialized'){
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AdminAddTeamToMatches(
+                      tId: widget.uuid,
+                      mId: thisMatch['id'],
+                      tName: widget.tournamentName,
+                    )),
+                    (route) => false);
+          }else if(matchStatusRetireve=='Players-initialized'){
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AdminTossSelect(
+                      tName: widget.tournamentName,
+                      tId: widget.uuid,
+                      mId: thisMatch['id'],
+                    )),
+                    (route) => false);
+          }else{
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AdminScoreChangePage(mId: thisMatch['id'],tId: widget.uuid,)),
+                    (route) => false);
+          }
         },
         child: FutureBuilder<String>(
           future: matchStatus,
@@ -1962,42 +1992,99 @@ class AdminTossSelect extends StatefulWidget {
 }
 
 class _AdminTossSelect extends State<AdminTossSelect> {
-  late Future<String> team_A_Name;
-  late Future<String> team_B_Name;
+   String team_A_Name='Team A';
+   String team_B_Name='Team B';
   bool isTeamATossWin = false;
   bool isTeamBTossWin = false;
   bool isBattingSelected = false;
   bool isBowlingSelected = false;
   late DatabaseReference dbRef1;
+  late StreamSubscription teamANameSubscription;
+  late StreamSubscription teamBNameSubscription;
 
   @override
   void initState() {
     super.initState();
-    team_A_Name = getTeamName('Team-A');
-    team_B_Name = getTeamName('Team-B');
+    DatabaseReference teamARef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/Team-A/id");
+    teamARef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        DatabaseReference teamNameRef = FirebaseDatabase.instance
+            .ref()
+            .child("Teams/${snapshot.value}/short");
+        teamANameSubscription = teamNameRef.onValue.listen((event2) {
+          DataSnapshot snapshot2=event2.snapshot;
+          if (snapshot2.value != null) {
+            setState(() {
+              team_A_Name = snapshot2.value.toString();
+            });
+          }
+        });
+      }
+    });
+
+    // Set up the database subscription for Team-B name
+    DatabaseReference teamBRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/Team-B/id");
+     teamBRef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        DatabaseReference teamNameRef = FirebaseDatabase.instance
+            .ref()
+            .child("Teams/${snapshot.value}/short");
+        teamBNameSubscription =teamNameRef.onValue.listen((event3) {
+          DataSnapshot snapshot3 = event3.snapshot;
+          if (snapshot3.value != null) {
+            setState(() {
+              team_B_Name = snapshot3.value.toString();
+            });
+          }
+        });
+      }
+    });
+
+  }
+
+  @override
+  void dispose() {
+    // Cancel the database subscriptions when the widget is disposed
+    teamANameSubscription.cancel();
+    teamBNameSubscription.cancel();
+    super.dispose();
   }
 
   Future<String> getTeamName(String team) async {
-    //DatabaseReference dbRef = FirebaseDatabase.instance.ref().child("Tournaments/${widget.tId}/Matches/${widget.mId}/$team/team name");
     DatabaseReference dbRef = FirebaseDatabase.instance
         .ref()
         .child("Tournaments/${widget.tId}/Matches/${widget.mId}/$team/id");
-    DatabaseEvent event = await dbRef.once();
-    DataSnapshot snapshot = event.snapshot;
-    if (snapshot.value != null) {
-      DatabaseReference dbRef2 = FirebaseDatabase.instance
-          .ref()
-          .child("Teams/${snapshot.value}/short");
-      DatabaseEvent event2 = await dbRef2.once();
-      DataSnapshot snapshot2 = event2.snapshot;
-      if (snapshot2.value != null) {
-        return snapshot2.value.toString();
+
+    Completer<String> completer = Completer<String>();
+
+    dbRef.onValue.listen((event) async {
+      print("NEWNEWNEW 1 :this is it");
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        DatabaseReference dbRef2 = FirebaseDatabase.instance
+            .ref()
+            .child("Teams/${snapshot.value}/short");
+        dbRef2.onValue.listen((event2) async{
+          DataSnapshot snapshot2 = event2.snapshot;
+          if (snapshot2.value != null) {
+            completer.complete(snapshot2.value.toString());
+          } else {
+            completer.complete("");
+          }
+        });
+
       } else {
-        return "";
+        completer.complete("");
       }
-    } else {
-      return "";
-    }
+    });
+
+    return completer.future;
   }
 
   @override
@@ -2051,25 +2138,14 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                           isTeamBTossWin = false;
                         });
                       },
-                      child: FutureBuilder<String>(
-                        future: team_A_Name,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return CircularProgressIndicator();
-                          } else if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          } else {
-                            return Padding(
+                      child: Padding(
                               padding: EdgeInsets.only(top: 15.w, bottom: 15.w),
-                              child: Text(snapshot.data ?? '',
+                              child: Text(team_A_Name,
                                   style: TextStyle(
                                       color: Colors.white, fontSize: 15.w)),
-                            );
-                          }
-                        },
-                      ),
-                    ),
+                            ),)
+
+
                   ),
                   Padding(
                     padding: EdgeInsets.only(top: 15.w),
@@ -2087,26 +2163,16 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                           isTeamBTossWin = true;
                         });
                       },
-                      child: FutureBuilder<String>(
-                        future: team_B_Name,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return CircularProgressIndicator();
-                          } else if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          } else {
-                            return Padding(
+                      child:Padding(
                               padding: EdgeInsets.only(top: 15.w, bottom: 15.w),
-                              child: Text(snapshot.data ?? '',
+                              child: Text(team_B_Name,
                                   style: TextStyle(
                                       color: Colors.white, fontSize: 15.w)),
-                            );
-                          }
-                        },
+                            )
+
                       ),
                     ),
-                  )
+
                 ],
               ),
             ),
@@ -2297,16 +2363,20 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                    dbRef1.child(lossTeamName).update(tossLossSelected);
                   });
 
-
-                  Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminMatchesConfigurePage(
-                            uuid: widget.tId!, tournamentName: widget.tName!),
-                      ),
-                          (route) => false);
-
-
+                  if ((!isTeamBTossWin && !isTeamATossWin) ||
+                      (!isBattingSelected && !isBowlingSelected)) {
+                    null;
+                  } else {
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AdminMatchesConfigurePage(
+                                  uuid: widget.tId!, tournamentName: widget
+                                  .tName!),
+                        ),
+                            (route) => false);
+                  }
                 },
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
@@ -2325,13 +2395,17 @@ class _AdminTossSelect extends State<AdminTossSelect> {
 }
 
 class AdminScoreChangePage extends StatefulWidget {
-  const AdminScoreChangePage({super.key});
+  final tId,mId;
+  const AdminScoreChangePage({super.key,required this.mId,required this.tId});
 
   @override
   State<StatefulWidget> createState() => _AdminScoreChange();
 }
 
 class _AdminScoreChange extends State<AdminScoreChangePage> {
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
