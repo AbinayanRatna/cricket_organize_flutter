@@ -677,18 +677,52 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                               .child('Tournaments/${widget.uuid}/Matches')
                               .child(uuid);
                         });
-                        // this onTap
-                        Fluttertoast.showToast(
-                            msg: "msg", toastLength: Toast.LENGTH_SHORT);
+
                         Map<String, String> matches = {
                           "id": uuid,
                           "definedOrNot": "Not",
                           "TeamA-defined": "Not",
                           "TeamB-defined": "Not",
-                          "Status":"Initialized"
+                          "Status":"Initialized",
+                          "Now Batting":"Not",
+                          "Now Bowling":"Not",
+                          "First innings finished":"Not",
+                          "Second innings finished":"Not",
+                        };
+
+                        Map<String,String> statiscticsInitiaizationFirstBall={
+                          "innings_runs":'0',
+                          "innings_wicket":'0',
+                          "innings_overs":'0',
+                          'bowler_name':'not',
+                          'bowler_id':'not',
+                          'now_batting_name':'not',
+                          'now_batting_id':'not',
+                          'next_batting_name':'not',
+                          'next_batting_id':'not',
+                          'bowler_balls':'0',
+                          'bowler_runs':'0',
+                          'bowler_wicket':'0',
+                          'now_batsman_runs':'0',
+                          'now_batsman_balls':'0',
+                          'now_batsman_four':'0',
+                          'now_batsman_six':'0',
+                          'next_batsman_runs':'0',
+                          'next_batsman_balls':'0',
+                          'next_batsman_four':'0',
+                          'next_batsman_six':'0',
+                        };
+
+                        Map<String,int> statisctics={
+                          "Runs":0,
+                          "Wickets_given":0,
                         };
 
                         referenceMatches.set(matches);
+                        referenceMatches.child('Statistics/firstInnings').push().set(statiscticsInitiaizationFirstBall);
+                        referenceMatches.child('Statistics/secondInnings').push().set(statiscticsInitiaizationFirstBall);
+                        referenceMatches.child('Statistics/Team-A').update(statisctics);
+                        referenceMatches.child('Statistics/Team-B').update(statisctics);
                       },
                       child: Container(
                           child: Icon(Icons.add_circle,
@@ -2064,7 +2098,6 @@ class _AdminTossSelect extends State<AdminTossSelect> {
     Completer<String> completer = Completer<String>();
 
     dbRef.onValue.listen((event) async {
-      print("NEWNEWNEW 1 :this is it");
       DataSnapshot snapshot = event.snapshot;
       if (snapshot.value != null) {
         DatabaseReference dbRef2 = FirebaseDatabase.instance
@@ -2292,12 +2325,7 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                   Map<String, String> tossWinTeam= {
                     "Toss_win": "Not selected",
                   };
-                  Map<String, String> tossWinSelected={
-                    "First_innings": "Not selected",
-                };
-                  Map<String, String> tossLossSelected={
-                    "First_innings": "Not selected",
-                  };
+
                   String winTeamName='No defined';
                   String lossTeamName='No defined';
                   setState(() {
@@ -2311,24 +2339,17 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                       if (isBattingSelected) {
                         tossWinTeam = {
                           "Toss_win": "Team-A",
-                          "Status":"Tossed"
+                          "Status":"Tossed",
+                    "Now Batting": "Team-A",
+                    "Now Bowling": "Team-B",
                         };
-                        tossWinSelected = {
-                          "First_innings": "Batting",
-                        };
-                        tossLossSelected = {
-                          "First_innings": "Bowling",
-                        };
+
                       } else if(isBowlingSelected){
                         tossWinTeam = {
                           "Toss_win": "Team-A",
-                          "Status":"Tossed"
-                        };
-                        tossWinSelected = {
-                          "First_innings": "Bowling",
-                        };
-                        tossLossSelected = {
-                          "First_innings": "Batting",
+                          "Status":"Tossed",
+                          "Now Batting": "Team-B",
+                          "Now Bowling": "Team-A",
                         };
                       }
                     }else{
@@ -2337,30 +2358,21 @@ class _AdminTossSelect extends State<AdminTossSelect> {
                       if (isBattingSelected) {
                         tossWinTeam = {
                           "Toss_win": "Team-B",
-                          "Status":"Tossed"
+                          "Status":"Tossed",
+                          "Now Batting": "Team-B",
+                          "Now Bowling": "Team-A",
                         };
-                        tossWinSelected = {
-                          "First_innings": "Batting",
-                        };
-                        tossLossSelected = {
-                          "First_innings": "Bowling",
-                        };
+
                       } else if(isBowlingSelected){
                         tossWinTeam = {
                           "Toss_win": "Team-B",
-                          "Status":"Tossed"
-                        };
-                        tossWinSelected = {
-                          "First_innings": "Bowling",
-                        };
-                        tossLossSelected = {
-                          "First_innings": "Batting",
+                          "Status":"Tossed",
+                          "Now Batting": "Team-A",
+                          "Now Bowling": "Team-B",
                         };
                       }
                     }
                     dbRef1.update(tossWinTeam);
-                    dbRef1.child(winTeamName).update(tossWinSelected);
-                   dbRef1.child(lossTeamName).update(tossLossSelected);
                   });
 
                   if ((!isTeamBTossWin && !isTeamATossWin) ||
@@ -2403,8 +2415,309 @@ class AdminScoreChangePage extends StatefulWidget {
 }
 
 class _AdminScoreChange extends State<AdminScoreChangePage> {
+   String battingTeam='teamA';
+   String bowlingTeam='teamB';
+   String battingTeamRuns='0';
+   String wicketsNow='0';
+   String oversFinished='0';
+   String ballsInAnOver='0';
+   String totalOvers='0';
+   String nowBattingName='0';
+   String nowBattingId='0';
+   String nowBattingRuns='0';
+   String nowBattingBalls='0';
+   String nowBattingSix='0';
+   String nowBattingFour='0';
+   String nextBattingName='0';
+   String nextBattingId='0';
+   String nextBattingRuns='0';
+   String nextBattingBalls='0';
+   String nextBattingSix='0';
+   String nextBattingFours='0';
+   String bowlingPlayerName='0';
+   String bowlingPlayerId='0';
+   String bowlingPlayerWickets='0';
+   String bowlingPlayerRuns='0';
+   String bowlingPlayerBalls='0';
+  bool isFirstInningsFinished=false;
+  bool isSecondInningsFinished=false;
+  late StreamSubscription battingTeamNameSubscription;
+  late StreamSubscription bowlingTeamNameSubscription;
+  late StreamSubscription ballsInAnOverSubscription;
+  late StreamSubscription totalOverSubscription;
+  late StreamSubscription battingTeamRunsSubscription;
+  late StreamSubscription wicketsNowSubscription;
+  late StreamSubscription oversFinishedSubscription;
+  late StreamSubscription firstInningsFinishedSubscription;
+  late StreamSubscription secondInningsFinishedSubscription;
 
+  @override
+  void initState() {
+    super.initState();
 
+    DatabaseReference firstInningsFinishedRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/First innings finished");
+    firstInningsFinishedSubscription=firstInningsFinishedRef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        setState(() {
+          ( snapshot.value.toString()=='true')?isFirstInningsFinished=true:isFirstInningsFinished=false;
+        });
+      }
+    });
+
+    DatabaseReference secondInningsFinishedRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/Second innings finished");
+    secondInningsFinishedSubscription=secondInningsFinishedRef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        setState(() {
+          ( snapshot.value.toString()=='true')?isSecondInningsFinished=true:isSecondInningsFinished=false;
+        });
+      }
+    });
+
+    DatabaseReference battingTeamRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/Now Batting");
+    battingTeamNameSubscription=battingTeamRef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        setState(() {
+          DatabaseReference batingTeamRef2 = FirebaseDatabase.instance
+              .ref()
+              .child("Tournaments/${widget.tId}/Matches/${widget.mId}/${snapshot.value.toString()}/team name");
+          batingTeamRef2.onValue.listen((event) {
+            DataSnapshot snapshot = event.snapshot;
+            if (snapshot.value != null) {
+              setState(() {
+                battingTeam=snapshot.value.toString();
+
+              });
+            }
+          });
+        });
+      }
+    });
+
+    DatabaseReference bowlingTeamRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/Now Bowling");
+    bowlingTeamNameSubscription=bowlingTeamRef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        setState(() {
+          DatabaseReference bowlingTeamRef2 = FirebaseDatabase.instance
+              .ref()
+              .child("Tournaments/${widget.tId}/Matches/${widget.mId}/${snapshot.value.toString()}/team name");
+          bowlingTeamRef2.onValue.listen((event) {
+            DataSnapshot snapshot = event.snapshot;
+            if (snapshot.value != null) {
+              setState(() {
+               bowlingTeam=snapshot.value.toString();
+
+              });
+            }
+          });
+          });
+      }
+    });
+
+    DatabaseReference ballsInAnOverRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/balls in an over");
+    ballsInAnOverSubscription=ballsInAnOverRef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        setState(() {
+          ballsInAnOver=snapshot.value.toString();
+        });
+      }
+    });
+
+    DatabaseReference totalOverRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Overs");
+    totalOverSubscription=totalOverRef.onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        setState(() {
+          totalOvers=snapshot.value.toString();
+        });
+      }
+    });
+
+    obtainDetails('innings_runs');
+    obtainDetails('innings_overs');
+    obtainDetails('innings_wicket');
+    obtainDetails('bowler_wickets');
+    obtainDetails('bowler_runs');
+    obtainDetails('bowler_balls');
+    obtainDetails('bowler_name');
+    obtainDetails('bowler_id');
+    obtainDetails('now_batting_six');
+    obtainDetails('now_batting_four');
+    obtainDetails('now_batting_balls');
+    obtainDetails('now_batting_runs');
+    obtainDetails('next_batting_six');
+    obtainDetails('next_batting_four');
+    obtainDetails('now_batting_balls');
+    obtainDetails('next_batting_runs');
+    obtainDetails('now_batting_name');
+    obtainDetails('now_batting_id');
+    obtainDetails('next_batting_name');
+    obtainDetails('next_batting_id');
+  }
+
+  void runsAdd(String runs){
+    String newRuns=(int.parse(runs)+int.parse(battingTeamRuns)).toString();
+    String nowBatsmenRuns=(int.parse(runs)+int.parse(nowBattingRuns)).toString();
+    String nowBatsmenBalls=(1+int.parse(nowBattingBalls)).toString();
+    String nowBowlerRuns=(int.parse(runs)+int.parse(bowlingPlayerRuns)).toString();
+    String BowlerBalls=(1+int.parse(bowlingPlayerBalls)).toString();
+    String newInningsOvers='0';
+    //String newInningsOvers=((1+int.parse(oversFinished))/int.parse(ballsInAnOver)).toString();
+
+    DatabaseReference battingRunsRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
+    Map<String,String> statisticsForBall={
+      "innings_runs":newRuns,
+      "innings_wicket":wicketsNow,
+      "innings_overs":newInningsOvers,
+      'bowler_name':bowlingPlayerName,
+      'bowler_id':bowlingPlayerId,
+      'now_batting_name':nowBattingName,
+      'now_batting_id':nowBattingId,
+      'next_batting_name':nextBattingName,
+      'next_batting_id':nextBattingId,
+      'bowler_balls':BowlerBalls,
+      'bowler_runs':nowBowlerRuns,
+      'bowler_wicket':bowlingPlayerWickets,
+      'now_batsman_runs':nowBatsmenRuns,
+      'now_batsman_balls':nowBatsmenBalls,
+      'now_batsman_four':nowBattingFour,
+      'now_batsman_six':nowBattingSix,
+      'next_batsman_runs':nextBattingRuns,
+      'next_batsman_balls':nextBattingBalls,
+      'next_batsman_four':nextBattingFours,
+      'next_batsman_six':nextBattingSix,
+    };
+    battingRunsRef.push().update(statisticsForBall);
+  }
+
+  void obtainDetails(String reference){
+
+    DatabaseReference battingRunsRef = FirebaseDatabase.instance
+        .ref()
+        .child("Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
+    wicketsNowSubscription=battingRunsRef.orderByKey().limitToLast(1).onValue.listen((event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        Map<dynamic, dynamic>? data = snapshot.value as Map<dynamic, dynamic>?;
+        if (data != null && data.isNotEmpty) {
+          String lastKey = data.keys.first;
+          Map<dynamic, dynamic>? lastNode = data[lastKey] as Map<dynamic, dynamic>?; // Explicit casting
+
+          // Check if the last node contains the 'bowler_name' key
+          if (lastNode != null && lastNode.containsKey(reference)) {
+            dynamic nowRetrieved = lastNode[reference];
+
+            if (nowRetrieved != null) {
+              setState(() {
+               switch(reference){
+                 case 'innings_runs':{
+                   battingTeamRuns= nowRetrieved.toString();
+                 }
+                 case 'innings_overs':{
+                   oversFinished= nowRetrieved.toString();
+                 }
+                 case 'innings_wicket':{
+                   wicketsNow= nowRetrieved.toString();
+                 }
+                 case 'now_batting_name':{
+                   nowBattingName= nowRetrieved.toString();
+                 }
+                 case 'now_batting_id':{
+                   nowBattingId= nowRetrieved.toString();
+                 }
+                 case 'next_batting_id':{
+                   nextBattingId= nowRetrieved.toString();
+                 }
+                 case 'next_batting_name':{
+                   nextBattingName= nowRetrieved.toString();
+                 }
+                 case 'next_batting_runs':{
+                   nextBattingRuns= nowRetrieved.toString();
+                 }
+                 case 'next_batting_balls':{
+                   nextBattingBalls= nowRetrieved.toString();
+                 }
+                 case 'next_batting_four':{
+                   nextBattingFours= nowRetrieved.toString();
+                 }
+                 case 'next_batting_six':{
+                   nextBattingSix= nowRetrieved.toString();
+                 }
+                 case 'now_batting_runs':{
+                   nowBattingRuns= nowRetrieved.toString();
+                 }
+                 case 'now_batting_balls':{
+                   nowBattingBalls= nowRetrieved.toString();
+                 }
+                 case 'now_batting_four':{
+                   nowBattingFour= nowRetrieved.toString();
+                 }
+                 case 'now_batting_six':{
+                   nowBattingSix= nowRetrieved.toString();
+                 }
+                 case 'bowler_name':{
+                   bowlingPlayerName= nowRetrieved.toString();
+                 }
+                 case 'bowler_id':{
+                   bowlingPlayerId= nowRetrieved.toString();
+                 }
+                 case 'bowler_balls':{
+                   bowlingPlayerBalls= nowRetrieved.toString();
+                 }
+                 case 'bowler_runs':{
+                   bowlingPlayerRuns= nowRetrieved.toString();
+                 }
+                 case 'bowler_wickets':{
+                   bowlingPlayerWickets= nowRetrieved.toString();
+                 }
+               }
+              });
+            }
+          }
+        } else {
+          print("No data available at the specified path.");
+        }
+      } else {
+        print("Snapshot 34is null or empty.");
+      }
+    }, onError: (Object error) {
+      print("Error: $error");
+    });
+
+  }
+
+  @override
+  void dispose() {
+    // Cancel the database subscriptions when the widget is disposed
+    battingTeamNameSubscription.cancel();
+    firstInningsFinishedSubscription.cancel();
+    secondInningsFinishedSubscription.cancel();
+    bowlingTeamNameSubscription.cancel();
+    oversFinishedSubscription.cancel();
+    wicketsNowSubscription.cancel();
+    battingTeamRunsSubscription.cancel();
+    totalOverSubscription.cancel();
+    ballsInAnOverSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2429,15 +2742,15 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '100/',
+                        battingTeamRuns+"/",
                         style: TextStyle(fontSize: 25.w),
                       ),
                       Text(
-                        '5',
+                        wicketsNow,
                         style: TextStyle(fontSize: 25.w),
                       ),
                       Text(
-                        '  (1.4/10)',
+                        '  ($oversFinished/$totalOvers)',
                         style: TextStyle(fontSize: 15.w),
                       ),
                     ],
@@ -2447,7 +2760,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                       top: 10.w,
                     ),
                     child: Text(
-                      "CSK is Bowling now",
+                      "$bowlingTeam is Bowling now",
                       style: TextStyle(fontSize: 15.w),
                     ),
                   )
@@ -2467,7 +2780,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                           child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                "Rohit sharma (now) : 30 (40) ",
+                                "$nowBattingName : $nowBattingRuns ($nowBattingBalls) *",
                                 style: TextStyle(fontSize: 15.w),
                               )),
                         )),
@@ -2477,7 +2790,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                           padding: EdgeInsets.only(left: 40.w),
                           child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Text("Virat kholi (now) : 30 (40) ",
+                              child: Text("$nextBattingName : $nextBattingRuns ($nextBattingBalls) ",
                                   style: TextStyle(fontSize: 15.w))),
                         ))
                   ],
@@ -2492,7 +2805,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                     child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          "Harbajan singh : 30/4 (3.5) ",
+                          "$bowlingPlayerName : $bowlingPlayerRuns/$bowlingPlayerWickets (${(int.parse(bowlingPlayerBalls)/int.parse(totalOvers)).toString()}) ",
                           style: TextStyle(fontSize: 15.w),
                         )),
                   ))),
@@ -2514,7 +2827,9 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                             flex: 1,
                             child: Material(
                               child: InkWell(
-                                onTap: () {},
+                                onTap: () {
+                                  runsAdd('0');
+                                },
                                 splashColor: Colors.black87,
                                 child: Container(
                                   //width: MediaQuery.of(context).size.width,
@@ -2537,7 +2852,9 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                             flex: 1,
                             child: Material(
                               child: InkWell(
-                                  onTap: () {},
+                                  onTap: () {
+                                    runsAdd('1');
+                                  },
                                   splashColor: Colors.black87,
                                   child: Container(
                                       //width: MediaQuery.of(context).size.width,
@@ -2558,7 +2875,9 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                             flex: 1,
                             child: Material(
                                 child: InkWell(
-                                    onTap: () {},
+                                    onTap: () {
+                                      runsAdd('2');
+                                    },
                                     splashColor: Colors.black87,
                                     child: Container(
                                         //width: MediaQuery.of(context).size.width,
