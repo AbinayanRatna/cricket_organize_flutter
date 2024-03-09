@@ -693,7 +693,8 @@ class _AdminMatchesConfigurePage extends State<AdminMatchesConfigurePage> {
                         Map<String,String> statiscticsInitiaizationFirstBall={
                           "innings_runs":'0',
                           "innings_wicket":'0',
-                          "innings_overs":'0',
+                          "innings_balls":'0',
+                          "innings_overs":'0.0',
                           'bowler_name':'not',
                           'bowler_id':'not',
                           'now_batting_name':'not',
@@ -2420,6 +2421,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
    String battingTeamRuns='0';
    String wicketsNow='0';
    String oversFinished='0';
+   String totalBallsFinished='0';
    String ballsInAnOver='0';
    String totalOvers='0';
    String nowBattingName='0';
@@ -2557,29 +2559,70 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
     obtainDetails('bowler_balls');
     obtainDetails('bowler_name');
     obtainDetails('bowler_id');
-    obtainDetails('now_batting_six');
-    obtainDetails('now_batting_four');
-    obtainDetails('now_batting_balls');
-    obtainDetails('now_batting_runs');
-    obtainDetails('next_batting_six');
-    obtainDetails('next_batting_four');
-    obtainDetails('now_batting_balls');
-    obtainDetails('next_batting_runs');
+    obtainDetails('now_batsman_six');
+    obtainDetails('now_batsman_four');
+    obtainDetails('now_batsman_balls');
+    obtainDetails('now_batsman_runs');
+    obtainDetails('next_batsman_six');
+    obtainDetails('next_batsman_four');
+    obtainDetails('next_batsman_balls');
+    obtainDetails('next_batsman_runs');
     obtainDetails('now_batting_name');
     obtainDetails('now_batting_id');
     obtainDetails('next_batting_name');
     obtainDetails('next_batting_id');
+    obtainDetails('innings_balls');
   }
 
-  void runsAdd(String runs){
+  void runsAdd(String runs,bool isWicket,bool isSwap){
+    print("newnew : "+'1');
     String newRuns=(int.parse(runs)+int.parse(battingTeamRuns)).toString();
+    print("newnew : "+'2');
     String nowBatsmenRuns=(int.parse(runs)+int.parse(nowBattingRuns)).toString();
+    print("newnew : "+'3');
     String nowBatsmenBalls=(1+int.parse(nowBattingBalls)).toString();
+    print("newnew : "+'4');
     String nowBowlerRuns=(int.parse(runs)+int.parse(bowlingPlayerRuns)).toString();
+    print("newnew : "+'5');
     String BowlerBalls=(1+int.parse(bowlingPlayerBalls)).toString();
-    String newInningsOvers='0';
-    //String newInningsOvers=((1+int.parse(oversFinished))/int.parse(ballsInAnOver)).toString();
+    print("newnew : "+'6');
+    String newInningsBalls=(1+int.parse(totalBallsFinished)).toString();
+    print("newnew : "+'7');
+    int oversWholeNumberNow=int.parse(newInningsBalls) ~/ int.parse(ballsInAnOver);
+    print("newnew : "+'8');
+    int remainingBallsNow=int.parse(newInningsBalls) % int.parse(ballsInAnOver);
+    print("newnew : "+'9');
+    String newInningsOvers=(oversWholeNumberNow+(remainingBallsNow/10)).toString();
+    print("newnew : "+'10');
 
+    if(isSwap==true){
+      print("newnew : "+'11');
+      String tempName=nowBattingName;
+      String tempRuns=nowBatsmenRuns;
+      String tempBalls=nowBatsmenBalls;
+      String tempFour=nowBattingFour;
+      String tempSix=nowBattingSix;
+      String tempId=nowBattingId;
+      print('newnewnew : $tempId + $tempBalls + $tempRuns +$tempName');
+      print("newnew : "+'12');
+      nowBattingName=nextBattingName;
+      nowBattingId=nextBattingId;
+      nowBatsmenBalls=nextBattingBalls;
+      nowBatsmenRuns=nextBattingRuns;
+      nowBattingFour=nextBattingFours;
+      print('newnewnew : $nowBattingId + $nowBattingBalls + $nowBattingRuns +$nowBattingName');
+      print("newnew : "+'13');
+      nowBattingSix=nextBattingSix;
+      nextBattingName=tempName;
+      nextBattingId=tempId;
+      nextBattingBalls=tempBalls;
+      nextBattingRuns=tempRuns;
+      nextBattingFours=tempFour;
+      nextBattingSix=tempSix;
+      print('newnewnew : $nextBattingId + $nextBattingName+ $nextBattingBalls + $nextBattingRuns ');
+      print("newnew : "+'14');
+    }
+    print("newnew : "+'15');
     DatabaseReference battingRunsRef = FirebaseDatabase.instance
         .ref()
         .child("Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
@@ -2588,6 +2631,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       "innings_wicket":wicketsNow,
       "innings_overs":newInningsOvers,
       'bowler_name':bowlingPlayerName,
+      'innings_balls':newInningsBalls,
       'bowler_id':bowlingPlayerId,
       'now_batting_name':nowBattingName,
       'now_batting_id':nowBattingId,
@@ -2605,7 +2649,9 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       'next_batsman_four':nextBattingFours,
       'next_batsman_six':nextBattingSix,
     };
+    print("newnew : "+'16');
     battingRunsRef.push().update(statisticsForBall);
+    print("newnew : "+'17');
   }
 
   void obtainDetails(String reference){
@@ -2640,6 +2686,9 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                  case 'now_batting_name':{
                    nowBattingName= nowRetrieved.toString();
                  }
+                 case 'innings_balls':{
+                   totalBallsFinished= nowRetrieved.toString();
+                 }
                  case 'now_batting_id':{
                    nowBattingId= nowRetrieved.toString();
                  }
@@ -2649,28 +2698,28 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                  case 'next_batting_name':{
                    nextBattingName= nowRetrieved.toString();
                  }
-                 case 'next_batting_runs':{
+                 case 'next_batsman_runs':{
                    nextBattingRuns= nowRetrieved.toString();
                  }
-                 case 'next_batting_balls':{
+                 case 'next_batsman_balls':{
                    nextBattingBalls= nowRetrieved.toString();
                  }
-                 case 'next_batting_four':{
+                 case 'next_batsman_four':{
                    nextBattingFours= nowRetrieved.toString();
                  }
-                 case 'next_batting_six':{
+                 case 'next_batsman_six':{
                    nextBattingSix= nowRetrieved.toString();
                  }
-                 case 'now_batting_runs':{
+                 case 'now_batsman_runs':{
                    nowBattingRuns= nowRetrieved.toString();
                  }
-                 case 'now_batting_balls':{
+                 case 'now_batsman_balls':{
                    nowBattingBalls= nowRetrieved.toString();
                  }
-                 case 'now_batting_four':{
+                 case 'now_batsman_four':{
                    nowBattingFour= nowRetrieved.toString();
                  }
-                 case 'now_batting_six':{
+                 case 'now_batsman_six':{
                    nowBattingSix= nowRetrieved.toString();
                  }
                  case 'bowler_name':{
@@ -2685,7 +2734,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                  case 'bowler_runs':{
                    bowlingPlayerRuns= nowRetrieved.toString();
                  }
-                 case 'bowler_wickets':{
+                 case 'bowler_wicket':{
                    bowlingPlayerWickets= nowRetrieved.toString();
                  }
                }
@@ -2702,6 +2751,15 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       print("Error: $error");
     });
 
+  }
+
+  String bowlerOverReturn(String ballsInAnOver,String bowlerBalls){
+    int overs=int.parse(bowlerBalls) ~/ int.parse(ballsInAnOver);
+    int remainingBalls=int.parse(bowlerBalls) % int.parse(ballsInAnOver);
+   // "$bowlingPlayerName : $bowlingPlayerRuns/$bowlingPlayerWickets (${(int.parse(bowlingPlayerBalls)/int.parse(totalOvers)).toString()}) ",
+
+    return ((overs+(remainingBalls/10)).toString());
+    //return (('int.parse(bowlerBalls) ~/ int.parse(ballsInAnOver)'+('int.parse(bowlerBalls) % int.parse(ballsInAnOver)'/10)).toString());
   }
 
   @override
@@ -2804,8 +2862,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                     padding: EdgeInsets.only(left: 40.w),
                     child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          "$bowlingPlayerName : $bowlingPlayerRuns/$bowlingPlayerWickets (${(int.parse(bowlingPlayerBalls)/int.parse(totalOvers)).toString()}) ",
+                        child: Text('$bowlingPlayerName : $bowlingPlayerRuns/$bowlingPlayerWickets ('+(((int.parse(bowlingPlayerBalls) ~/ int.parse(ballsInAnOver)+(int.parse(bowlingPlayerBalls) % int.parse(ballsInAnOver)/10)).toString())+')'),
                           style: TextStyle(fontSize: 15.w),
                         )),
                   ))),
@@ -2828,7 +2885,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                             child: Material(
                               child: InkWell(
                                 onTap: () {
-                                  runsAdd('0');
+                                  runsAdd('0',false,false);
                                 },
                                 splashColor: Colors.black87,
                                 child: Container(
@@ -2853,7 +2910,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                             child: Material(
                               child: InkWell(
                                   onTap: () {
-                                    runsAdd('1');
+                                    runsAdd('1',false,true);
                                   },
                                   splashColor: Colors.black87,
                                   child: Container(
@@ -2876,7 +2933,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                             child: Material(
                                 child: InkWell(
                                     onTap: () {
-                                      runsAdd('2');
+                                      runsAdd('2',false,false);
                                     },
                                     splashColor: Colors.black87,
                                     child: Container(
