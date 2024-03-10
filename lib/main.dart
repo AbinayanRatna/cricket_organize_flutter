@@ -2577,31 +2577,38 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
   }
 
   void runsAdd(String runs, bool isWicket, bool isSwap,
-      {bool isFour = false, bool isSix = false}) {
-    print("newnew :wide nb " + '$runsForWide $runsForNB');
+      {bool isFour = false,
+      bool isSix = false,
+      bool batsmanRunsAdd = true,
+      bool ballsIncrease = true}) {
     String newRuns = (int.parse(runs) + int.parse(battingTeamRuns)).toString();
-    print("newnew : " + '2');
-    String nowBatsmenRuns =
-        (int.parse(runs) + int.parse(nowBattingRuns)).toString();
-    print("newnew : " + '3');
-    String nowBatsmenBalls = (1 + int.parse(nowBattingBalls)).toString();
-    print("newnew : " + '4');
+    String nowBatsmenRuns = " ";
+    if (batsmanRunsAdd) {
+      nowBatsmenRuns = (int.parse(runs) + int.parse(nowBattingRuns)).toString();
+    } else {
+      nowBatsmenRuns = (nowBattingRuns);
+    }
+    String nowBatsmenBalls = ' ';
+    String BowlerBalls = ' ';
+    String newInningsBalls = ' ';
+    if (ballsIncrease) {
+      nowBatsmenBalls = (1 + int.parse(nowBattingBalls)).toString();
+      BowlerBalls = (1 + int.parse(bowlingPlayerBalls)).toString();
+      newInningsBalls = (1 + int.parse(totalBallsFinished)).toString();
+    } else {
+      nowBatsmenBalls = nowBattingBalls;
+      BowlerBalls = bowlingPlayerBalls;
+      newInningsBalls = totalBallsFinished;
+    }
+
     String nowBowlerRuns =
         (int.parse(runs) + int.parse(bowlingPlayerRuns)).toString();
-    print("newnew : " + '5');
-    String BowlerBalls = (1 + int.parse(bowlingPlayerBalls)).toString();
-    print("newnew : " + '6');
-    String newInningsBalls = (1 + int.parse(totalBallsFinished)).toString();
-    print("newnew : " + '7');
     int oversWholeNumberNow =
         int.parse(newInningsBalls) ~/ int.parse(ballsInAnOver);
-    print("newnew : " + '8');
     int remainingBallsNow =
         int.parse(newInningsBalls) % int.parse(ballsInAnOver);
-    print("newnew : " + '9');
     String newInningsOvers =
         (oversWholeNumberNow + (remainingBallsNow / 10)).toString();
-    print("newnew : " + '10');
 
     if (runs == '4' && isFour == true) {
       nowBattingFour = (int.parse(nowBattingFour) + 1).toString();
@@ -3227,26 +3234,30 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                                                 style: TextStyle(
                                                     fontSize: 25.w))))))),
                         Expanded(
-                            flex: 1,
-                            child: Material(
-                                child: InkWell(
-                                    onTap: () {
-                                      runsAdd('7', false, true);
-                                    },
-                                    splashColor: Colors.black87,
-                                    child: Container(
-                                        //width: MediaQuery.of(context).size.width,
-                                        height:
-                                            MediaQuery.of(context).size.height,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white54,
-                                            shape: BoxShape.rectangle,
-                                            border: Border.all(
-                                                color: Colors.black)),
-                                        child: Center(
-                                            child: Text("7",
-                                                style: TextStyle(
-                                                    fontSize: 25.w))))))),
+                          flex: 1,
+                          child: Material(
+                            child: InkWell(
+                              onTap: () {
+                                runsAdd('7', false, true);
+                              },
+                              splashColor: Colors.black87,
+                              child: Container(
+                                //width: MediaQuery.of(context).size.width,
+                                height: MediaQuery.of(context).size.height,
+                                decoration: BoxDecoration(
+                                    color: Colors.white54,
+                                    shape: BoxShape.rectangle,
+                                    border: Border.all(color: Colors.black)),
+                                child: Center(
+                                  child: Text(
+                                    "7",
+                                    style: TextStyle(fontSize: 25.w),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -3260,9 +3271,130 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                             child: Material(
                                 child: InkWell(
                                     onTap: () {
-                                      {
-
-                                      }
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          int wideRuns = int.parse(runsForWide);
+                                          int totalRuns = 0;
+                                          return StatefulBuilder(
+                                            builder: (context, setState) {
+                                              return AlertDialog(
+                                                title: Text("Total runs"),
+                                                actions: <Widget>[
+                                                  Padding(
+                                                    padding: EdgeInsets.only(
+                                                        left: 20.w,
+                                                        right: 10.w),
+                                                    child: Row(
+                                                      children: [
+                                                        Expanded(
+                                                            flex: 1,
+                                                            child: Text(
+                                                                "$runsForWide + (",
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        15.w))),
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: ElevatedButton(
+                                                              onPressed: () {
+                                                                setState(() {
+                                                                  totalRuns++;
+                                                                });
+                                                              },
+                                                              child: Center(
+                                                                  child: Text(
+                                                                      "+",
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              20.w)))),
+                                                        ),
+                                                        Expanded(
+                                                            flex: 1,
+                                                            child: Center(
+                                                                child: Text(
+                                                                    "$totalRuns",
+                                                                    style: TextStyle(
+                                                                        fontSize:
+                                                                            15.w)))),
+                                                        Expanded(
+                                                          flex: 1,
+                                                          child: ElevatedButton(
+                                                              onPressed: () {
+                                                                setState(() {
+                                                                  if (totalRuns >
+                                                                      0) {
+                                                                    totalRuns--;
+                                                                  }
+                                                                });
+                                                              },
+                                                              child: Center(
+                                                                  child: Text(
+                                                                      "-",
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              20.w)))),
+                                                        ),
+                                                        Expanded(
+                                                            flex: 1,
+                                                            child: Text(
+                                                                " ) = ${int.parse(runsForWide) + totalRuns}",
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        15.w))),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: 20.w,
+                                                  ),
+                                                  ElevatedButton(
+                                                      onPressed: () {
+                                                        if (totalRuns % 2 ==
+                                                            0) {
+                                                          runsAdd(
+                                                              (int.parse(runsForWide) +
+                                                                      totalRuns)
+                                                                  .toString(),
+                                                              false,
+                                                              false,
+                                                              ballsIncrease:
+                                                                  false,
+                                                              batsmanRunsAdd:
+                                                                  false);
+                                                        } else {
+                                                          runsAdd(
+                                                              (int.parse(runsForWide) +
+                                                                      totalRuns)
+                                                                  .toString(),
+                                                              false,
+                                                              true,
+                                                              ballsIncrease:
+                                                                  false,
+                                                              batsmanRunsAdd:
+                                                                  false);
+                                                        }
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  left: 10.w,
+                                                                  right: 10.w,
+                                                                  top: 5.w,
+                                                                  bottom: 5.w),
+                                                          child: Text(
+                                                            "Save",
+                                                            style: TextStyle(
+                                                                fontSize: 20.w),
+                                                          )))
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      );
                                     },
                                     splashColor: Colors.black87,
                                     child: Container(
@@ -3645,3 +3777,4 @@ class _AdminMatchSettingsChange extends State<AdminMatchSettingsChange> {
     );
   }
 }
+
