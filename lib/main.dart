@@ -2633,10 +2633,10 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
     Map <String,String> BatsmenDetail={
       'Batsman Name':nowBattingName,
       'Batsman Id':nowBattingId,
-      'Balls':nowBattingBalls,
+      'Balls':nowBatsmenBalls,
       'Fours':nowBattingFour,
       'Six':nowBattingSix,
-      'runs':nowBattingRuns
+      'runs':nowBatsmenRuns
     };
 
     DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
