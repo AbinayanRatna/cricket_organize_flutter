@@ -2431,8 +2431,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
   String nextBattingFours = '0';
   String bowlingPlayerName = '0';
   String bowlingPlayerId = '0';
-  String idNum = '0';
-  String idNumString = '0';
+  String thisIsLastKey='0';
   String bowlingPlayerWickets = '0';
   String bowlingPlayerRuns = '0';
   String bowlingPlayerBalls = '0';
@@ -2584,8 +2583,6 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       bool isSix = false,
       bool batsmanRunsAdd = true,
       bool ballsIncrease = true}) {
-    idNum=(int.parse(idNum)+1).toString();
-    idNumString='N-$idNum';
     String newRuns = (int.parse(runs) + int.parse(battingTeamRuns)).toString();
     String nowBatsmenRuns = " ";
     if (batsmanRunsAdd) {
@@ -2628,8 +2625,6 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                 .toStringAsFixed(2))
         .toString();
 
-    print('newnewnewnew   : $nowBattingName , $nowBattingBalls  , $nowBattingRuns');
-
     Map <String,String> BatsmenDetail={
       'Batsman Name':nowBattingName,
       'Batsman Id':nowBattingId,
@@ -2640,7 +2635,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
     };
 
     DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
-        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings/N-${idNum}/batsmen details/$nowBattingId");
+        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings/$thisIsLastKey/batsmen details/$nowBattingId");
     batsmanDetailsRef.update(BatsmenDetail);
 
     if (isSwap == true) {
@@ -2665,7 +2660,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
     }
 
     DatabaseReference battingRunsRef = FirebaseDatabase.instance.ref().child(
-        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings/N-${idNum}");
+        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
     Map<String, String> statisticsForBall = {
       "innings_runs": newRuns,
       "innings_wicket": wicketsNow,
@@ -2691,10 +2686,10 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       'Current_run_rate': currentRunRate,
       'runsForNB': runsForNB,
       'runsForWide': runsForWide,
-      'now_id':idNum
+      'now_id':thisIsLastKey
     };
 
-    battingRunsRef.update(statisticsForBall);
+    battingRunsRef.push().set(statisticsForBall);
   }
 
   void obtainDetails(String reference) {
@@ -2706,15 +2701,15 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       if (snapshot.value != null) {
         Map<dynamic, dynamic>? data = snapshot.value as Map<dynamic, dynamic>?;
         if (data != null && data.isNotEmpty) {
-          String lastKey = data.keys.first;
+          thisIsLastKey = data.keys.first;
           Map<dynamic, dynamic>? lastNode =
-              data[lastKey] as Map<dynamic, dynamic>?; // Explicit casting
+              data[thisIsLastKey] as Map<dynamic, dynamic>?; // Explicit casting
 
           // Check if the last node contains the 'bowler_name' key
           if (lastNode != null && lastNode.containsKey(reference)) {
             print('newnewnew : hell no');
             dynamic nowRetrieved = lastNode[reference];
-
+            //String lastKey = values.keys.first;
             if (nowRetrieved != null) {
               setState(() {
                 switch (reference) {
@@ -2742,10 +2737,6 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                     {
                       nowBattingId = nowRetrieved.toString();
                     }
-                  case 'now_id':
-                    {
-                      idNum = nowRetrieved.toString();
-                    }
                   case 'runsForWide':
                     {
                       runsForWide = nowRetrieved.toString();
@@ -2754,7 +2745,6 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                     {
                       runsForNB = nowRetrieved.toString();
                     }
-                    print('newnewnew nnowww : $runsForNB , $runsForWide');
                   case 'next_batting_id':
                     {
                       nextBattingId = nowRetrieved.toString();
@@ -4134,11 +4124,11 @@ class _AdminMatchSettingsChange extends State<AdminMatchSettingsChange> {
                   };
                   referenceMatches
                       .child('Statistics/firstInnings')
-                      .child('N-0')
+                      .push()
                       .set(statiscticsInitiaizationFirstBall);
                   referenceMatches
                       .child('Statistics/secondInnings')
-                      .child('N-0')
+                  .push()
                       .set(statiscticsInitiaizationFirstBall);
                   Map<String, String> statusUpdate = {
                     "Status": "settingsUpdated",
