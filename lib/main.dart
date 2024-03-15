@@ -2624,6 +2624,47 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
                 .toStringAsFixed(2))
         .toString();
 
+    DatabaseReference battingRunsRef = FirebaseDatabase.instance.ref().child(
+        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
+    String? newKey = battingRunsRef.push().key;
+    DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
+        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings").child(newKey!);
+    DatabaseReference batsmanDetailsRef2 = FirebaseDatabase.instance.ref().child(
+        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
+
+    batsmanDetailsRef2.orderByKey().limitToLast(1).once().then((DatabaseEvent event) {
+      DataSnapshot snapshot=event.snapshot;
+      if (snapshot.value != null) {
+        Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
+        values.forEach((key, value) {
+          print("Key: $key");
+          print("innings_wicket: ${value['innings_wicket']}");
+          print("next_batting_name: ${value['next_batting_name']}");
+
+          // Iterate through batsmen details
+          Map<dynamic, dynamic> batsmenDetails = value['batsmen details'];
+
+          batsmenDetails.forEach((key, batsmanData) {
+
+            Map <String,String> BatsmenDetail2={
+              'Batsman Name':batsmanData['Batsman Name'],
+              'Batsman Id':batsmanData['Batsman Id'],
+              'Balls':batsmanData['Balls'],
+              'Fours':batsmanData['Fours'],
+              'Six':batsmanData['Six'],
+              'runs':batsmanData['runs']
+            };
+            batsmanDetailsRef.child('batsmen details/${batsmanData['Batsman Id']}').update(BatsmenDetail2);
+            print("Batsman Name: $key");
+            print("Batsman ID: ${batsmanData['Batsman Id']}");
+            print("Batsman Runs: ${batsmanData['runs']}");
+          });
+        });
+      }else{
+        print('notnotnotnotnotnot');
+      }
+    });
+
     Map <String,String> BatsmenDetail={
       'Batsman Name':nowBattingName,
       'Batsman Id':nowBattingId,
@@ -2632,6 +2673,8 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       'Six':nowBattingSix,
       'runs':nowBatsmenRuns
     };
+
+    batsmanDetailsRef.child('batsmen details/$nowBattingId').set(BatsmenDetail);
 
     if (isSwap == true) {
       String tempName = nowBattingName;
@@ -2654,9 +2697,6 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       nextBattingSix = tempSix;
     }
 
-    DatabaseReference battingRunsRef = FirebaseDatabase.instance.ref().child(
-        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
-    String? newKey = battingRunsRef.push().key;
     Map<String, String> statisticsForBall = {
       "innings_runs": newRuns,
       "innings_wicket": wicketsNow,
@@ -2684,10 +2724,13 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       'runsForWide': runsForWide,
       'now_id':thisIsLastKey
     };
-    battingRunsRef.child(newKey!).set(statisticsForBall);
-    DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
-        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings/${newKey!}/batsmen details/$nowBattingId");
-    batsmanDetailsRef.set(BatsmenDetail);
+    battingRunsRef.child(newKey!).update(statisticsForBall);
+
+    //DatabaseReference lastItemRef = batsmanDetailsRef.orderByKey().limitToLast(1);
+
+    // Retrieve the batsmen detail from the last item
+
+
   }
 
   void obtainDetails(String reference) {
