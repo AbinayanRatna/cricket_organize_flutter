@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
@@ -2634,10 +2633,6 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       'runs':nowBatsmenRuns
     };
 
-    DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
-        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings/$thisIsLastKey/batsmen details/$nowBattingId");
-    batsmanDetailsRef.update(BatsmenDetail);
-
     if (isSwap == true) {
       String tempName = nowBattingName;
       String tempRuns = nowBatsmenRuns;
@@ -2661,6 +2656,7 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
 
     DatabaseReference battingRunsRef = FirebaseDatabase.instance.ref().child(
         "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
+    String? newKey = battingRunsRef.push().key;
     Map<String, String> statisticsForBall = {
       "innings_runs": newRuns,
       "innings_wicket": wicketsNow,
@@ -2688,8 +2684,10 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       'runsForWide': runsForWide,
       'now_id':thisIsLastKey
     };
-
-    battingRunsRef.push().set(statisticsForBall);
+    battingRunsRef.child(newKey!).set(statisticsForBall);
+    DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
+        "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings/${newKey!}/batsmen details/$nowBattingId");
+    batsmanDetailsRef.set(BatsmenDetail);
   }
 
   void obtainDetails(String reference) {
@@ -4103,10 +4101,10 @@ class _AdminMatchSettingsChange extends State<AdminMatchSettingsChange> {
                     'now_id':'0',
                     'bowler_name': 'not',
                     'bowler_id': 'not',
-                    'now_batting_name': 'not',
-                    'now_batting_id': 'not',
-                    'next_batting_name': 'not',
-                    'next_batting_id': 'not',
+                    'now_batting_name': '1001',
+                    'now_batting_id': '1001',
+                    'next_batting_name': '1002',
+                    'next_batting_id': '1002',
                     'bowler_balls': '0',
                     'bowler_runs': '0',
                     'bowler_wicket': '0',
@@ -4160,3 +4158,55 @@ class _AdminMatchSettingsChange extends State<AdminMatchSettingsChange> {
   }
 }
 
+/*
+import 'package:firebase_database/firebase_database.dart';
+
+Future<void> runsAdd(String runs, bool isWicket, bool isSwap,
+      {bool isFour = false,
+      bool isSix = false,
+      bool batsmanRunsAdd = true,
+      bool ballsIncrease = true}) async {
+
+  DatabaseReference battingRunsRef = FirebaseDatabase.instance.ref().child(
+      "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
+  String newRunKey = battingRunsRef.push().key;
+
+  // Retrieve the reference to the last item in the list
+  DatabaseReference lastItemRef = battingRunsRef.orderByKey().limitToLast(1);
+
+  // Retrieve the batsmen detail from the last item
+  Map<String, dynamic>? lastItemBatsmenDetail;
+  await lastItemRef.once().then((DataSnapshot snapshot) {
+    if (snapshot.value != null) {
+      Map<dynamic, dynamic> values = snapshot.value;
+      String lastKey = values.keys.first;
+      lastItemBatsmenDetail = values[lastKey]['batsmen details'];
+    }
+  });
+
+  // Combine last batsmen detail with the current batsmen detail
+  Map<String, String> combinedBatsmenDetail = {...lastItemBatsmenDetail, ...{
+    'Batsman Name': nowBattingName,
+    'Batsman Id': nowBattingId,
+    'Balls': nowBatsmenBalls,
+    'Fours': nowBattingFour,
+    'Six': nowBattingSix,
+    'runs': nowBatsmenRuns
+  }};
+
+  // Update statisticsForBall with the new key
+  Map<String, String> statisticsForBall = {
+    // Your existing statisticsForBall fields...
+    'now_id': newRunKey // Updated with the new key
+  };
+
+  // Add statisticsForBall to the database
+  await battingRunsRef.child(newRunKey).set(statisticsForBall);
+
+  // Update batsmanDetailsRef with combined batsmen detail
+  DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
+      "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings/$newRunKey/batsmen details");
+  await batsmanDetailsRef.set(combinedBatsmenDetail);
+}
+
+ */
