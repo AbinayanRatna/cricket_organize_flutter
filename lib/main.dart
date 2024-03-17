@@ -2583,15 +2583,15 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
       bool batsmanRunsAdd = true,
       bool ballsIncrease = true}) {
     String newRuns = (int.parse(runs) + int.parse(battingTeamRuns)).toString();
-    String nowBatsmenRuns = " ";
+    String nowBatsmenRuns = "0";
     if (batsmanRunsAdd) {
       nowBatsmenRuns = (int.parse(runs) + int.parse(nowBattingRuns)).toString();
     } else {
       nowBatsmenRuns = (nowBattingRuns);
     }
-    String nowBatsmenBalls = ' ';
-    String BowlerBalls = ' ';
-    String newInningsBalls = ' ';
+    String nowBatsmenBalls = '0';
+    String BowlerBalls = '0';
+    String newInningsBalls = '0';
     if (ballsIncrease) {
       nowBatsmenBalls = (1 + int.parse(nowBattingBalls)).toString();
       BowlerBalls = (1 + int.parse(bowlingPlayerBalls)).toString();
@@ -2626,55 +2626,97 @@ class _AdminScoreChange extends State<AdminScoreChangePage> {
 
     DatabaseReference battingRunsRef = FirebaseDatabase.instance.ref().child(
         "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
+
+// Push a new child and retrieve its key
     String? newKey = battingRunsRef.push().key;
+
+// Reference to the newly pushed child
     DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
         "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings").child(newKey!);
+
+// Reference to the parent node
     DatabaseReference batsmanDetailsRef2 = FirebaseDatabase.instance.ref().child(
         "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings");
 
+// Retrieve the details of the last batsman
     batsmanDetailsRef2.orderByKey().limitToLast(1).once().then((DatabaseEvent event) {
       DataSnapshot snapshot=event.snapshot;
       if (snapshot.value != null) {
+        // Get the batsmen details from the last item
         Map<dynamic, dynamic> values = snapshot.value as Map<dynamic, dynamic>;
         values.forEach((key, value) {
-          print("Key: $key");
-          print("innings_wicket: ${value['innings_wicket']}");
-          print("next_batting_name: ${value['next_batting_name']}");
-
           // Iterate through batsmen details
           Map<dynamic, dynamic> batsmenDetails = value['batsmen details'];
+          Map<dynamic, dynamic> bowlerDetails = value['bowler details'];
+
+          batsmenDetails.forEach((key, bowlerData) {
+
+            Map<String, String> batsmenDetailPast = {
+              'Bowler_Name': bowlerData['Bowler_Name'].toString(),
+              'Bowler_Id': bowlerData['Bowler_Id'].toString(),
+              'Balls': bowlerData['Balls'].toString(),
+              'Wickets': bowlerData['Wickets'].toString(),
+              'Runs': bowlerData['Runs'].toString()
+            };
+
+            if(bowlingPlayerId.toString() == key.toString()){
+              print('same value obtained');
+            }else{
+              // Update batsmanDetailsRef with the details of the last batsman
+              batsmanDetailsRef.child('batsmen details').child(bowlerData['Batsman Id']).update(batsmenDetailPast).then((_) {
+
+              }).catchError((error) {
+
+                print('Error updating current batsman details: $error');
+              });
+            }
+          });
 
           batsmenDetails.forEach((key, batsmanData) {
 
-            Map <String,String> BatsmenDetail2={
-              'Batsman Name':batsmanData['Batsman Name'],
-              'Batsman Id':batsmanData['Batsman Id'],
-              'Balls':batsmanData['Balls'],
-              'Fours':batsmanData['Fours'],
-              'Six':batsmanData['Six'],
-              'runs':batsmanData['runs']
+            Map<String, String> batsmenDetailPast = {
+              'Batsman Name': batsmanData['Batsman Name'].toString(),
+              'Batsman Id': batsmanData['Batsman Id'].toString(),
+              'Balls': batsmanData['Balls'].toString(),
+              'Fours': batsmanData['Fours'].toString(),
+              'Six': batsmanData['Six'].toString(),
+              'runs': batsmanData['runs'].toString()
             };
-            batsmanDetailsRef.child('batsmen details/${batsmanData['Batsman Id']}').update(BatsmenDetail2);
-            print("Batsman Name: $key");
-            print("Batsman ID: ${batsmanData['Batsman Id']}");
-            print("Batsman Runs: ${batsmanData['runs']}");
+
+            String nowBatsmenChange=(isSwap)?nextBattingId:nowBattingId;
+             if(nowBatsmenChange.toString() == key.toString()){
+             print('same value obtained');
+           }else{
+             // Update batsmanDetailsRef with the details of the last batsman
+             batsmanDetailsRef.child('batsmen details').child(batsmanData['Batsman Id']).update(batsmenDetailPast).then((_) {
+
+             }).catchError((error) {
+
+               print('Error updating current batsman details: $error');
+             });
+           }
           });
         });
-      }else{
-        print('notnotnotnotnotnot');
       }
+    }).catchError((error) {
+      print('Error retrieving last batsman details: $error');
     });
 
-    Map <String,String> BatsmenDetail={
-      'Batsman Name':nowBattingName,
-      'Batsman Id':nowBattingId,
-      'Balls':nowBatsmenBalls,
-      'Fours':nowBattingFour,
-      'Six':nowBattingSix,
-      'runs':nowBatsmenRuns
+// Update batsmanDetailsRef with the details of the current batsman
+    Map<String, String> batsmenDetail = {
+      'Batsman Name': nowBattingName,
+      'Batsman Id': nowBattingId,
+      'Balls': nowBatsmenBalls,
+      'Fours': nowBattingFour,
+      'Six': nowBattingSix,
+      'runs': nowBatsmenRuns
     };
 
-    batsmanDetailsRef.child('batsmen details/$nowBattingId').set(BatsmenDetail);
+    batsmanDetailsRef.child('batsmen details/$nowBattingId').update(batsmenDetail).then((_) {
+      print('Current batsman details updated successfully');
+    }).catchError((error) {
+      print('Error updating current batsman details: $error');
+    });
 
     if (isSwap == true) {
       String tempName = nowBattingName;
@@ -4136,14 +4178,15 @@ class _AdminMatchSettingsChange extends State<AdminMatchSettingsChange> {
                       .ref()
                       .child('Tournaments/${widget.tId}/Matches')
                       .child(widget.mId);
+                  String? newKey = referenceMatches.push().key;
                   Map<String, String> statiscticsInitiaizationFirstBall = {
                     "innings_runs": '0',
                     "innings_wicket": '0',
                     "innings_balls": '0',
                     "innings_overs": '0.0',
                     'now_id':'0',
-                    'bowler_name': 'not',
-                    'bowler_id': 'not',
+                    'bowler_name': '2001',
+                    'bowler_id': '2001',
                     'now_batting_name': '1001',
                     'now_batting_id': '1001',
                     'next_batting_name': '1002',
@@ -4163,20 +4206,42 @@ class _AdminMatchSettingsChange extends State<AdminMatchSettingsChange> {
                     'runsForWide': wideRuns.toString(),
                     'runsForNB': noBallRuns.toString(),
                   };
+
+                  DatabaseReference batsmanDetailsRef = FirebaseDatabase.instance.ref().child(
+                      "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/firstInnings").child(newKey!);
+                  DatabaseReference batsmanDetailsRef2 = FirebaseDatabase.instance.ref().child(
+                      "Tournaments/${widget.tId}/Matches/${widget.mId}/Statistics/secondInnings").child(newKey!);
                   referenceMatches
-                      .child('Statistics/firstInnings')
-                      .push()
+                      .child('Statistics/firstInnings/$newKey')
                       .set(statiscticsInitiaizationFirstBall);
                   referenceMatches
-                      .child('Statistics/secondInnings')
-                  .push()
+                      .child('Statistics/secondInnings/$newKey')
                       .set(statiscticsInitiaizationFirstBall);
                   Map<String, String> statusUpdate = {
                     "Status": "settingsUpdated",
                   };
 
-                  referenceMatches.update(statusUpdate);
+                  Map <String,String> BatsmenDetail2={
+                    'Batsman Name':'not',
+                    'Batsman Id':'not',
+                    'Balls':'0',
+                    'Fours':'0',
+                    'Six':'0',
+                    'runs':'0'
+                  };
 
+                  Map <String,String> BowlerDetail2={
+                    'Bowler_Name':'not',
+                    'Bowler_Id':'not',
+                    'Balls':'0',
+                    'Runs':'0',
+                    'Wickets':'0'
+                  };
+                  referenceMatches.update(statusUpdate);
+                  batsmanDetailsRef.child('batsmen details').child('first').update(BatsmenDetail2);
+                  batsmanDetailsRef2.child('batsmen details').child('first').update(BatsmenDetail2);
+                  batsmanDetailsRef.child('bowler details').child('first').update(BowlerDetail2);
+                  batsmanDetailsRef2.child('bowler details').child('first').update(BowlerDetail2);
                   Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
@@ -4188,7 +4253,7 @@ class _AdminMatchSettingsChange extends State<AdminMatchSettingsChange> {
                 child: Padding(
                   padding: EdgeInsets.only(top: 20.w, bottom: 20.w),
                   child: Text(
-                    "Resume Match",
+                    "Save settings",
                     style: TextStyle(color: Colors.white, fontSize: 15.w),
                   ),
                 ),
